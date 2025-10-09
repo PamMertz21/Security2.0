@@ -150,6 +150,7 @@ main {
   justify-content: center;
   align-items: center;
   padding: 0;
+  user-select: none;
 }
 
 .logo-container {

@@ -14,9 +14,9 @@
     <div class="btn-container">
         <button class="btn mb-4" type="submit">Login</button>
     </div>
-  <div class="btn-container">
-    <button type="button" class="btn mb-4" @click="goToForgotPass()">Forgot Password</button>
-  </div>
+    <div class="btn-container" style="margin-top: 1em;">
+      <button type="button" class="btn mb-4" @click="goToForgotPass()">Forgot Password</button>
+    </div>
   </form>
 </template>
 
