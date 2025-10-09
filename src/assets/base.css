@@ -23,9 +23,15 @@
 
 /* semantic color variables for this project */
 :root {
+  /* project color tokens (easy to change site theme here) */
   --color-background: var(--vt-c-white);
   --color-background-soft: var(--vt-c-white-soft);
   --color-background-mute: var(--vt-c-white-mute);
+
+  --color-primary: hsl(160, 100%, 37%); /* green-ish */
+  --color-primary-700: hsl(160, 90%, 30%);
+  --color-secondary: #625b71; /* muted purple for dark buttons */
+  --color-accent: #008000; /* header accent */
 
   --color-border: var(--vt-c-divider-light-2);
   --color-border-hover: var(--vt-c-divider-light-1);
@@ -41,6 +47,12 @@
     --color-background: var(--vt-c-black);
     --color-background-soft: var(--vt-c-black-soft);
     --color-background-mute: var(--vt-c-black-mute);
+
+    /* dark theme token overrides */
+    --color-primary: hsl(160, 90%, 45%);
+    --color-primary-700: hsl(160, 90%, 30%);
+    --color-secondary: #9a91a6;
+    --color-accent: #2b8f2b;
 
     --color-border: var(--vt-c-divider-dark-2);
     --color-border-hover: var(--vt-c-divider-dark-1);

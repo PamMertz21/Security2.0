@@ -3,69 +3,27 @@ import Signup from './components/SignupForm.vue';
 import Login from './components/LoginForm.vue';
 import Home from './components/HomePage.vue';
 import Dashboard from './components/UserDashboard.vue';
+import ForgotPassword from './components/ForgotPassword.vue';
 
 export default {
   components: {
     Signup,
     Login,
     Home,
-    Dashboard
+    Dashboard,
+    ForgotPassword
   },
   data() {
     return {
-      page: 'home',
-      currentUser: null
-    }
-  },
-  created() {
-    const savedSession = localStorage.getItem('sessionUser')
-    if (savedSession) {
-      try {
-        this.currentUser = JSON.parse(savedSession)
-        this.page = 'dashboard'
-      } catch {
-        localStorage.removeItem('sessionUser')
-      }
-    }
-  },
-  methods: {
-    getUsers() {
-      const raw = localStorage.getItem('users')
-      return raw ? JSON.parse(raw) : []
-    },
-    saveUsers(users) {
-      localStorage.setItem('users', JSON.stringify(users))
-    },
-    handleRegisterSuccess() {
-      alert('Registration successful. You can now log in.')
-      this.page = 'login'
-    },
-    handleLogin({ username, password }) {
-      const users = this.getUsers()
-      const user = users.find(u => u.username.toLowerCase() === username.toLowerCase())
-      if (!user || user.password !== password) {
-        alert('Invalid username or password')
-        return
-      }
-      this.currentUser = { username: user.username, email: user.email, firstName: user.firstName, lastName: user.lastName }
-      localStorage.setItem('sessionUser', JSON.stringify(this.currentUser))
-      this.page = 'dashboard'
-    },
-    handleApiLoginSuccess(user) {
-      this.currentUser = user
-      localStorage.setItem('sessionUser', JSON.stringify(user))
-      this.page = 'dashboard'
-    },
-    handleLogout() {
-      this.currentUser = null
-      localStorage.removeItem('sessionUser')
-      this.page = 'login'
+      page: 'home'
     }
   }
 }
 </script>
 
 <template>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <div id="app">
     <header v-if="page === 'signup'" class="portal">
       <img src="./assets/images/Caraga_State_University_-_Cabadbaran_Campus_logo_(Reduced).png" alt="Logo">
@@ -74,7 +32,7 @@ export default {
         <button @click="page = 'login'">Login</button>
       </div>
     </header>
-    <header v-if="page === 'login'" class="portal">
+    <header v-if="page === 'login' || page === 'forgot'" class="portal">
       <img src="./assets/images/Caraga_State_University_-_Cabadbaran_Campus_logo_(Reduced).png" alt="Logo">
       <div class="header-btn">
         <button @click="page = 'home'" class="dark-btn">Home</button>
@@ -91,19 +49,22 @@ export default {
     <header v-if="page === 'dashboard'">
       <img src="./assets/images/Caraga_State_University_-_Cabadbaran_Campus_logo_(Reduced).png" alt="Logo">
       <div class="header-btn">
-        <button @click="handleLogout">Logout</button>
+        <button @click="page = 'login'">Logout</button>
       </div>
     </header>
 
     <main>
       <div class="page-container" v-if="page === 'signup' || page === 'login'">
         <div class="logo-container">
-          <img src="./assets/images/findmyprof-3.png" alt=" Logo">
+          <div class="mask">
+            <img src="./assets/images/icon.png" alt=" Logo">
+          </div>
         </div>
         <div class="form-container">
           <div class="form-box">
-            <Signup v-if="page === 'signup'" @register-success="handleRegisterSuccess"/>
-            <Login v-else-if="page === 'login'" @login-success="handleApiLoginSuccess"/>
+            <Signup v-if="page === 'signup'" @go-login="page = 'login'"/>
+            <Login v-else-if="page === 'login'" @go-forgot="page = 'forgot'"/>
+            <ForgotPassword v-else-if="page === 'forgot'"/>
           </div>
         </div>
       </div>
@@ -118,7 +79,7 @@ export default {
     </main>
 
     <footer>
-      <p>&copy;  2025 www.handy.com - All Rights Reserved</p>
+      <p>&copy; 2025 CSUCC - All Rights Reserved</p>
     </footer>
   </div>
 </template>
@@ -137,11 +98,11 @@ header {
   justify-content: flex-end;
   align-items: center;
   padding: 1em;
-  background-color: #008000;
+  background-color: var(--color-accent);
 }
 
 .portal {
-  background-color: #bcf9bc86;
+  background-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
 }
 
 header img {
@@ -174,7 +135,7 @@ header .header-btn button {
   text-transform: uppercase;
 }
 .dark-btn {
-  background-color: #625b71;
+  background-color: var(--color-secondary);
   color: #fff;
 }
 
@@ -200,7 +161,22 @@ main {
 .logo-container img {
   margin: auto;
   width: 30em;
+  border-radius: 1em;
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--color-primary) 15%, rgba(0,0,0,0.4));
 }
+
+.mask {
+  background-color: #fafafa ;
+  -webkit-mask: url('@/assets/images/icon.png') no-repeat center / contain;
+  mask: url('@/assets/images/icon.png') no-repeat center / contain;
+  display: inline-block;
+}
+
+.mask:hover {
+  background-color: #4e4e4e;
+  transition: 0.3s ease;
+}
+
 
 .form-container {
   flex: 1;
