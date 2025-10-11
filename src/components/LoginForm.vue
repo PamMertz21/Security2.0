@@ -1,6 +1,17 @@
 <template>
   <form action="" method="POST">
     <h1>Login</h1>
+
+    <!-- central warning container (shows all current field messages) -->
+    <div class="warning-container" v-if="allWarnings.length">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+      </svg>
+      <ul>
+        <li v-for="(msg, idx) in allWarnings" :key="idx" class="warning">{{ msg }}</li>
+      </ul>
+    </div>
+
     <div class="form-content">
       <div class="form-group">
         <input type="text" id="username" name="username">
@@ -44,6 +55,7 @@ form {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 0em 2em;
 }
 
 h1 {
@@ -53,14 +65,12 @@ h1 {
 }
 
 .form-content {
-  gap: 1em;
+  gap: .7em;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1em 2em;
   border-radius: 1em;
-  margin: auto 0;
 }
 
 .form-group label {
@@ -82,6 +92,11 @@ h1 {
   border: 1px solid #111;
 }
 
+span {
+  color: #da0303;
+}
+
+/* button div */
 .btn-container {
   display: flex;
   gap: 1em;
@@ -97,5 +112,36 @@ h1 {
   box-shadow: 1px 1px 1px #00000095;
   color: #F1F0E4;
   font-size: .9em;
+}
+
+/* error warning */
+.warning-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 1em;
+  border: none;
+  border-radius: 1em;
+  background-color: rgba(233, 157, 157, 0.712);
+  font-size: .8em;
+  gap: 1em
+}
+
+.warning-container svg {
+  height: 3em;
+  color: #da0303;
+}
+
+.warning {
+  color: #da0303;
+}
+.warning-container ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+.warning-container li.warning {
+  margin: 0;
+  padding: 0;
+  line-height: 1.25;
 }
 </style>

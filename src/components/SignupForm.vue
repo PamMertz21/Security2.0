@@ -1,13 +1,17 @@
 <template>
-  <form @submit.prevent="register">
+  <form method="POST" @submit.prevent="register">
     <h1>Sign Up</h1>
-    <div class="form-content" v-if="step === 'personal'">
-      <div class="warning-container">
+      <!-- central warning container (shows all current field messages) -->
+      <div class="warning-container" v-if="allWarnings.length">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
         </svg>
-
+        <ul>
+          <li v-for="(msg, idx) in allWarnings" :key="idx" class="warning">{{ msg }}</li>
+        </ul>
       </div>
+
+    <div class="form-content" v-if="step === 'personal'">
       <div class="header">
         <h3>Personal Details</h3>
       </div>
@@ -19,7 +23,7 @@
         </div>
         <div class="form-group">
           <input type="text" id="mname" name="mname" v-model="form.middleInitial" required @input="validateMname">
-          <label for="mname">Middle Initial:</label>
+          <label for="mname">Middle Initial (Optional):</label>
         </div>
         <div class="form-group">
           <input type="text" id="lname" name="lname" v-model="form.lastName" required @input="validateName">
@@ -27,15 +31,14 @@
         </div>
         <div class="form-group">
           <input type="text" id="suffix" name="suffix" v-model="form.suffix" @input="validateSuffix">
-          <label for="suffix">Suffix: <span>*</span></label>
+          <label for="suffix">Suffix (Optional):</label>
         </div>
         <div class="form-group">
           <input type="date" id="birthdate" name="birthdate" v-model="form.birthdate" required @input="onBirthInput">
           <label for="birthdate">Birthdate: <span>*</span></label>
         </div>
         <div class="form-group">
-          <small id="age-warning" class="warning">{{ ageWarning }}</small>
-          <input type="num" id="age" name="age" v-model="form.age" required readonly>
+          <input type="number" id="age" name="age" v-model="form.age" required readonly>
           <label for="age">Age: <span>*</span></label>
         </div>
         <div class="form-group">
@@ -46,11 +49,11 @@
           <label for="mname">Sex: <span>*</span></label>
         </div>
         <div class="form-group">
-          <input type="email" id="email" name="email" v-model="form.email" required @input="validateEmail">
+          <input type="email" id="email" name="email" v-model="form.email" required @input="checkEmail">
           <label for="email">Email: <span>*</span></label>
         </div>
       </div>
-      <button type="button" @click="step = 'address'" class="btn">Next</button>
+      <button type="button" @click="step = 'address'" class="btn" :disabled="!canProceedPersonal">Next</button>
     </div>
 
     <div class="form-content" v-if="step === 'address'">
@@ -80,13 +83,13 @@
           <label for="country">Country: <span>*</span></label>
         </div>
         <div class="form-group">
-          <input type="num" id="zip" name="zip" v-model="form.zip" required @input="validateZipcode">
+          <input type="number" id="zip" name="zip" v-model="form.zip" required @input="validateZipcode">
           <label for="zip">Zip Code: <span>*</span></label>
         </div>
       </div>
       <div class="btn-container">
         <button type="button" @click="step = 'personal'" class="btn">Back</button>
-        <button type="button" @click="step = 'login_details'" class="btn">Next</button>
+        <button type="button" @click="step = 'login_details'" class="btn" :disabled="!canProceedAddress">Next</button>
       </div>
     </div>
 
@@ -97,16 +100,22 @@
       <hr>
       <div class="registration-box">
         <div class="form-group">
-          <input type="text" id="id" name="id" v-model="form.id" required @input="validateId">
+          <input type="text" id="id" name="id" v-model="form.id" required @input="checkID">
           <label for="id">ID No. <span>*</span></label>
         </div>
         <div class="form-group">
-          <input type="text" id="username" name="username" v-model="form.username" required @input="validateUsername">
+          <input type="text" id="username" name="username" v-model="form.username" required @input="checkUsername">
           <label for="username">Username: <span>*</span></label>
         </div>
         <div class="form-group">
           <input type="password" id="password" name="password" v-model="form.password" required @input="validatePassword">
           <label for="password">Password: <span>*</span></label>
+
+          <!-- Password Strength Display -->
+          <div v-if="form.password" class="password-strength">
+            <div class="strength-bar" :class="passwordStrengthClass"></div>
+            <p class="strength-text">{{ passwordStrengthLabel }}</p>
+          </div>
         </div>
         <div class="form-group">
           <input type="password" id="repassword" name="repassword" v-model="form.repassword" required @input="validateConfirmPassword">
@@ -127,6 +136,7 @@ export default {
     return {
       step: 'personal',
       ageWarning: '',
+      warnings: {},
       form: {
         id: '',
         firstName: '',
@@ -149,22 +159,57 @@ export default {
       }
     }
   },
-  methods: {
-    // this gets or creates inline warning span next to input
-    getOrCreateWarning(input) {
-      if (!input) return { textContent: '' };
-      const warningId = input.id + '-warning';
-      let warning = document.getElementById(warningId);
-      if (!warning) {
-        warning = document.createElement('small');
-        warning.id = warningId;
-        warning.className = 'warning';
-        warning.style.color = 'red';
-        input.parentNode.insertBefore(warning, input.nextSibling);
+  computed: {
+    allWarnings() {
+      // flatten arrays and return non-empty trimmed messages
+      const vals = Object.values(this.warnings || {});
+      const flat = [];
+      for (const v of vals) {
+        if (Array.isArray(v)) {
+          for (const m of v) {
+            if (m && String(m).trim()) flat.push(String(m).trim());
+          }
+        } else if (v && String(v).trim()) {
+          flat.push(String(v).trim());
+        }
       }
-      return warning;
+      return flat;
     },
+    // whether required fields for each step are filled
+    canProceedPersonal() {
+      // require firstName, lastName, birthdate and email to be non-empty and have no warnings
+      const f = this.form;
+      const filled = Boolean(f.firstName && String(f.firstName).trim() && f.lastName && String(f.lastName).trim() && f.birthdate && f.email && String(f.email).trim());
+      if (!filled) return false;
+      // check field-specific warnings (use input ids)
+      return !this.hasFieldWarnings(['fname','lname','birthdate','email','age']);
+    },
+    canProceedAddress() {
+      const f = this.form;
+      const filled = Boolean(
+        f.purok && String(f.purok).trim() &&
+        f.barangay && String(f.barangay).trim() &&
+        f.city && String(f.city).trim() &&
+        f.province && String(f.province).trim() &&
+        f.country && String(f.country).trim() &&
+        f.zip && String(f.zip).trim()
+      );
+      if (!filled) return false;
+      return !this.hasFieldWarnings(['purok','barangay','city','province','country','zip']);
+    }
+  },
 
+  methods: {
+    // returns true if any of the provided field ids have warnings
+    hasFieldWarnings(fieldIds) {
+      for (const id of fieldIds) {
+        const v = this.warnings && this.warnings[id];
+        if (!v) continue;
+        if (Array.isArray(v) && v.length) return true;
+        if (typeof v === 'string' && String(v).trim()) return true;
+      }
+      return false;
+    },
     // Utility validators
     wordsCapitalized(value) {
       const words = value.trim().split(/\s+/);
@@ -203,13 +248,11 @@ export default {
     // Wrapper to keep existing calculateAge behavior triggered from template
     onBirthInput() {
       this.calculateAge();
-      // also validate DOB for errors
-      const input = document.getElementById('birthdate');
-      const warning = this.getOrCreateWarning(input);
       let messages = [];
       const dob = this.form.birthdate;
       if (!dob) {
-        warning.textContent = '';
+        this.warnings['birthdate'] = [];
+        this.warnings['age'] = [];
         return;
       }
       const dobDate = new Date(dob);
@@ -219,10 +262,12 @@ export default {
       if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
         age--;
       }
-      if (isNaN(age) || age < 0) {
-        messages.push('Invalid Input!');
-      }
-      warning.textContent = messages.join('! ');
+      if (isNaN(age) || age < 0) messages.push('Invalid input!');
+      this.warnings['birthdate'] = messages;
+      const ageMsgs = [];
+      if (isNaN(age) || age < 0) ageMsgs.push('Age is invalid!');
+      else if (age < 18) ageMsgs.push('Age is below 18 years old');
+      this.warnings['age'] = ageMsgs;
     },
 
     calculateAge() {
@@ -230,6 +275,7 @@ export default {
       this.ageWarning = '';
       if (!dob) {
         this.form.age = '';
+        this.warnings['age'] = [];
         return;
       }
       const dobDate = new Date(dob);
@@ -245,73 +291,46 @@ export default {
       } else if (age < 18) {
         this.ageWarning = 'Age is below 18 years old';
       }
-    },
-    // --- Field-specific validators ---
-    validateId() {
-      const input = document.getElementById('id');
-      const warning = this.getOrCreateWarning(input);
-      let messages = [];
-      const idFormatRegex = /^\d{4}-\d{4}$/;
-      if (!this.form.id) {
-        warning.textContent = '';
-        return;
-      }
-      if (!idFormatRegex.test(this.form.id)) {
-        messages.push('ID must be in the format 0000-0000!');
-        warning.textContent = messages.join(' ');
-        return;
-      }
-      // Local duplicate check (server check would be better)
-      if (this.existingIds.includes(this.form.id)) {
-        messages.push('This User ID already exists!');
-      }
-      warning.textContent = messages.join(' ');
+      // mirror to central warnings array
+      const ageMsgs = [];
+      if (isNaN(age) || age < 0) ageMsgs.push('Age is invalid!');
+      else if (age < 18) ageMsgs.push('Age is below 18 years old');
+      this.warnings['age'] = ageMsgs;
     },
 
     validateName(evt) {
-      // Prefer using v-model value when evt is not provided
       const value = (evt && evt.target && evt.target.value) ? evt.target.value : this.form.firstName || this.form.lastName || '';
-      const input = evt ? evt.target : document.getElementById('fname');
-      const warning = this.getOrCreateWarning(input);
+      const id = (evt && evt.target && evt.target.id) ? evt.target.id : 'fname';
       let messages = [];
       if (this.allCaps(value)) messages.push('All caps is not allowed!');
       if (this.containsNum(value) || this.containsSymbol(value)) messages.push('Invalid Input!');
       if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
       if (this.hasThreeSameConsecutiveLetters(value)) messages.push('Three consecutive same letters are not allowed!');
       if (this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive spaces are not allowed!');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages;
     },
 
     validateMname(evt) {
       const input = evt.target;
+      const id = input.id;
       const value = input.value;
-      const warning = this.getOrCreateWarning(input);
       let messages = [];
       if (value.length > 2) messages.push('Input too long!');
       if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
       if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) messages.push('Invalid Input!');
       if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs error!');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages;
     },
 
     validateSuffix(evt) {
       const input = evt.target;
+      const id = input.id;
       const value = input.value;
-      const warning = this.getOrCreateWarning(input);
       let messages = [];
       if (value.length > 4) messages.push('Input too long!');
       if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
       if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) messages.push('Invalid Input!');
-      warning.textContent = messages.join('! ');
-    },
-
-    validateEmail(evt) {
-      const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
-      let messages = [];
-      if (!input.value) { warning.textContent = ''; return; }
-      if (this.existingEmails.includes(input.value)) messages.push('This email already exists!');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages;
     },
 
     validateAddress(evt) {
@@ -322,88 +341,128 @@ export default {
       if (this.allCaps(value)) messages.push('All caps not allowed!');
       if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
       if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs not allowed!');
-      return messages;
+      return messages; // Ensure this returns an array
     },
 
     validateStreet(evt) {
       const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
+      const id = input.id;
       let messages = this.validateAddress(evt);
       if (input.value.length > 0 && !this.onlyDashAllowed(input.value)) messages.push('Invalid input!');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages;
     },
 
     validateBrgy(evt) {
       const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
+      const id = input.id;
       let messages = this.validateAddress(evt);
       if (this.numisFollowedByAlphabet(input.value)) messages.push('Invalid Input!');
       if (this.numDashLetter(input.value)) messages.push('Invalid Input!');
       if (/^[a-zA-Z0-9.]+$/.test(input.value) === false && input.value.length > 0) messages.push('Invalid Input!');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages;
     },
 
     validateCity(evt) {
       const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
+      const id = input.id;
       let messages = this.validateAddress(evt);
       if (this.containsNum(input.value)) messages.push('Invalid Input');
       if (this.containsSymbol(input.value)) messages.push('Invalid Input!');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages;
     },
 
     validateProvince(evt) {
       const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
+      const id = input.id;
       let messages = this.validateAddress(evt);
       if (this.containsNum(input.value) || this.containsSymbol(input.value)) messages.push('Invalid Input!');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages;
     },
 
     validateCountry(evt) {
       const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
+      const id = input.id;
       let messages = this.validateAddress(evt);
       if (this.containsNum(input.value) || this.containsSymbol(input.value)) messages.push('Invalid Input!');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages;
     },
 
     validateZipcode(evt) {
       const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
+      const id = input.id;
       let messages = this.validateAddress(evt);
       const zipFormatRegex = /^\d{4}$/;
       if (!/[0-9]/.test(input.value)) messages.push('Invalid Input!');
       if (!zipFormatRegex.test(input.value)) messages.push('Zipcode must be 4 digits!');
-      warning.textContent = messages.join('! ');
-    },
-
-    validateUsername(evt) {
-      const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
-      let messages = [];
-      if (!input.value) { warning.textContent = ''; return; }
-      if (this.existingUsername.includes(input.value)) messages.push('This username already exists!');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages.join('! ');
     },
 
     validatePassword(evt) {
       const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
+      const id = input.id;
       let messages = [];
-      if (!input.value) { warning.textContent = ''; return; }
-      // Basic password rules can be added here
-      if (this.existingPassword.includes(input.value)) messages.push('This password is already used!');
-      warning.textContent = messages.join('! ');
+      if (!input.value) { this.warnings[id] = []; return; }
+      if (Array.isArray(this.existingPassword) && this.existingPassword.includes(input.value)) messages.push('This password is already used!');
+      this.warnings[id] = messages;
     },
 
     validateConfirmPassword(evt) {
       const input = evt.target;
-      const warning = this.getOrCreateWarning(input);
+      const id = input.id;
       let messages = [];
       if (this.form.password !== input.value) messages.push('Password do not match');
-      warning.textContent = messages.join('! ');
+      this.warnings[id] = messages;
     },
+
+    checkEmail(evt) {
+      this.validateUniqueField(evt, 'email'); // still calls DB check
+    },
+    checkID(evt) {
+      this.validateUniqueField(evt, 'id');
+    },
+    checkUsername(evt) {
+      this.validateUniqueField(evt, 'username');
+    },
+
+    // keep your existing validateUniqueField method as-is
+    validateUniqueField(evt, type) {
+      const input = evt.target;
+      const id = input.id;
+      const value = input.value.trim();
+      let messages = [];
+
+      if (!value) {
+        this.warnings[id] = [];
+        return;
+      }
+
+      // LOCAL VALIDATION
+      if (type === 'id' && !/^\d{4}-\d{4}$/.test(value)) messages.push('ID must be in the format 0000-0000!');
+      if (type === 'email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) messages.push('Invalid email format!');
+      }
+
+      // DATABASE CHECK
+      fetch('http://localhost/Security2.0/api/check_existing.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, value })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.exists) {
+            if (type === 'id') messages.push('This ID already exists!');
+            if (type === 'email') messages.push('This email is already registered!');
+            if (type === 'username') messages.push('This username already exists!');
+          }
+          this.warnings = { ...this.warnings, [id]: messages };
+        })
+        .catch(err => {
+          console.error(`Error checking ${type}:`, err);
+        });
+    },
+
     async register() {
       // Basic client-side validation
       if (!this.form.username || !this.form.email || !this.form.password) {
@@ -416,8 +475,8 @@ export default {
       }
 
       const payload = {
+        id: this.form.id,
         username: this.form.username,
-        email: this.form.email,
         password: this.form.password,
         profile: {
           firstName: this.form.firstName,
@@ -426,6 +485,7 @@ export default {
           suffix: this.form.suffix,
           birthdate: this.form.birthdate,
           age: this.form.age,
+          email: this.form.email,
           sex: this.form.sex
         },
         address: {
@@ -440,7 +500,7 @@ export default {
 
       try {
         // Use explicit Apache URL so the request reaches XAMPP even when dev server (Vite) is running on a different origin
-        const endpoint = 'http://localhost/Security/api/register.php';
+        const endpoint = 'http://localhost/Security2.0/api/register.php';
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -528,10 +588,6 @@ hr {
   width: 100%;
 }
 
-span {
-  color: red;
-}
-
 .btn-container {
   display: flex;
   gap: 1em;
@@ -550,6 +606,12 @@ span {
   text-transform: uppercase;
   font-weight: 550;
   font-size: .9em;
+}
+
+.btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .form-content > .btn {
