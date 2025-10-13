@@ -23,7 +23,7 @@
         </div>
         <div class="form-group">
           <input type="text" id="mname" name="mname" v-model="form.middleInitial" required @input="validateMname">
-          <label for="mname">Middle Initial (Optional):</label>
+          <label for="mname">Middle Initial: <span class="optional">(Optional)</span></label>
         </div>
         <div class="form-group">
           <input type="text" id="lname" name="lname" v-model="form.lastName" required @input="validateName">
@@ -31,7 +31,7 @@
         </div>
         <div class="form-group">
           <input type="text" id="suffix" name="suffix" v-model="form.suffix" @input="validateSuffix">
-          <label for="suffix">Suffix (Optional):</label>
+          <label for="suffix">Suffix: <span class="optional">(Optional)</span></label>
         </div>
         <div class="form-group">
           <input type="date" id="birthdate" name="birthdate" v-model="form.birthdate" required @input="onBirthInput">
@@ -100,7 +100,7 @@
       <hr>
       <div class="registration-box">
         <div class="form-group">
-          <input type="text" id="id" name="id" v-model="form.id" required @input="checkID">
+          <input type="text" id="user_id" name="user_id" v-model="form.id" required @input="checkID">
           <label for="id">ID No. <span>*</span></label>
         </div>
         <div class="form-group">
@@ -121,9 +121,34 @@
           <input type="password" id="repassword" name="repassword" v-model="form.repassword" required @input="validateConfirmPassword">
           <label for="repassword">Re-enter Password: <span>*</span></label>
         </div>
+        <div class="btn-container">
+          <button type="button" @click="step = 'address'" class="btn">Back</button>
+          <button type="button" @click="step = 'questions'" class="btn" :disabled="!canProceedAddress">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-content" v-if="step === 'questions'">
+      <div class="header">
+        <h3>Authentication Questions</h3>
+      </div>
+      <hr>
+      <div class="registration-box">
+        <div class="form-group">
+          <input type="text" id="user_id" name="user_id" v-model="form.id" required @input="checkID">
+          <label for="id">ID No. <span>*</span></label>
+        </div>
+        <div class="form-group">
+          <input type="text" id="username" name="username" v-model="form.username" required @input="checkUsername">
+          <label for="username">Username: <span>*</span></label>
+        </div>
+        <div class="form-group">
+          <input type="password" id="repassword" name="repassword" v-model="form.repassword" required @input="validateConfirmPassword">
+          <label for="repassword">Re-enter Password: <span>*</span></label>
+        </div>
       </div>
       <div class="btn-container">
-        <button type="button" @click="step = 'address'" class="btn">Back</button>
+        <button type="button" @click="step = 'login_details'" class="btn">Back</button>
         <button type="submit" class="btn">Register</button>
       </div>
     </div>
@@ -262,10 +287,10 @@ export default {
       if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
         age--;
       }
-      if (isNaN(age) || age < 0) messages.push('Invalid input!');
+      if (isNaN(age) || age < 0) messages.push('Invalid age input');
       this.warnings['birthdate'] = messages;
       const ageMsgs = [];
-      if (isNaN(age) || age < 0) ageMsgs.push('Age is invalid!');
+      if (isNaN(age) || age < 0) ageMsgs.push('Age is invalid');
       else if (age < 18) ageMsgs.push('Age is below 18 years old');
       this.warnings['age'] = ageMsgs;
     },
@@ -287,13 +312,13 @@ export default {
       }
       this.form.age = age;
       if (isNaN(age) || age < 0) {
-        this.ageWarning = 'Age is invalid!';
+        this.ageWarning = 'Age is invalid';
       } else if (age < 18) {
         this.ageWarning = 'Age is below 18 years old';
       }
       // mirror to central warnings array
       const ageMsgs = [];
-      if (isNaN(age) || age < 0) ageMsgs.push('Age is invalid!');
+      if (isNaN(age) || age < 0) ageMsgs.push('Age is invalid');
       else if (age < 18) ageMsgs.push('Age is below 18 years old');
       this.warnings['age'] = ageMsgs;
     },
@@ -302,9 +327,9 @@ export default {
       const value = (evt && evt.target && evt.target.value) ? evt.target.value : this.form.firstName || this.form.lastName || '';
       const id = (evt && evt.target && evt.target.id) ? evt.target.id : 'fname';
       let messages = [];
-      if (this.allCaps(value)) messages.push('All caps is not allowed!');
-      if (this.containsNum(value) || this.containsSymbol(value)) messages.push('Invalid Input!');
-      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
+      if (this.allCaps(value)) messages.push('All capatalized name is not allowed!');
+      if (this.containsNum(value) || this.containsSymbol(value)) messages.push('Invalid name input');
+      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word in your name must be capitalized');
       if (this.hasThreeSameConsecutiveLetters(value)) messages.push('Three consecutive same letters are not allowed!');
       if (this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive spaces are not allowed!');
       this.warnings[id] = messages;
@@ -316,9 +341,9 @@ export default {
       const value = input.value;
       let messages = [];
       if (value.length > 2) messages.push('Input too long!');
-      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
-      if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) messages.push('Invalid Input!');
-      if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs error!');
+      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word in your middle name must be capitalized');
+      if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) messages.push('Invalid middle name input');
+      if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs error');
       this.warnings[id] = messages;
     },
 
@@ -328,8 +353,8 @@ export default {
       const value = input.value;
       let messages = [];
       if (value.length > 4) messages.push('Input too long!');
-      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
-      if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) messages.push('Invalid Input!');
+      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word in your suffix must be capitalized!');
+      if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) messages.push('Invalid suffix input');
       this.warnings[id] = messages;
     },
 
@@ -348,7 +373,7 @@ export default {
       const input = evt.target;
       const id = input.id;
       let messages = this.validateAddress(evt);
-      if (input.value.length > 0 && !this.onlyDashAllowed(input.value)) messages.push('Invalid input!');
+      if (input.value.length > 0 && !this.onlyDashAllowed(input.value)) messages.push('Invalid street input');
       this.warnings[id] = messages;
     },
 
@@ -366,8 +391,8 @@ export default {
       const input = evt.target;
       const id = input.id;
       let messages = this.validateAddress(evt);
-      if (this.containsNum(input.value)) messages.push('Invalid Input');
-      if (this.containsSymbol(input.value)) messages.push('Invalid Input!');
+      if (this.containsNum(input.value)) messages.push('Invalid city input');
+      if (this.containsSymbol(input.value)) messages.push('Invalid city input!');
       this.warnings[id] = messages;
     },
 
@@ -383,7 +408,7 @@ export default {
       const input = evt.target;
       const id = input.id;
       let messages = this.validateAddress(evt);
-      if (this.containsNum(input.value) || this.containsSymbol(input.value)) messages.push('Invalid Input!');
+      if (this.containsNum(input.value) || this.containsSymbol(input.value)) messages.push('Invalid country input');
       this.warnings[id] = messages;
     },
 
@@ -392,7 +417,7 @@ export default {
       const id = input.id;
       let messages = this.validateAddress(evt);
       const zipFormatRegex = /^\d{4}$/;
-      if (!/[0-9]/.test(input.value)) messages.push('Invalid Input!');
+      if (!/[0-9]/.test(input.value)) messages.push('Invalid zipcode input');
       if (!zipFormatRegex.test(input.value)) messages.push('Zipcode must be 4 digits!');
       this.warnings[id] = messages.join('! ');
     },
@@ -415,7 +440,7 @@ export default {
     },
 
     checkEmail(evt) {
-      this.validateUniqueField(evt, 'email'); // still calls DB check
+      this.validateUniqueField(evt, 'email');
     },
     checkID(evt) {
       this.validateUniqueField(evt, 'id');
@@ -437,10 +462,16 @@ export default {
       }
 
       // LOCAL VALIDATION
-      if (type === 'id' && !/^\d{4}-\d{4}$/.test(value)) messages.push('ID must be in the format 0000-0000!');
+      if (id === 'user_id' && !/^\d{4}-\d{4}$/.test(value)) messages.push('ID must be in the format 0000-0000!');
       if (type === 'email') {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) messages.push('Invalid email format!');
+        if (!emailRegex.test(value)) messages.push('Invalid email format');
+      }
+      if (type === 'username') {
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        if (value.length < 5) messages.push('Username must be at least 5 characters long');
+        if (value.length > 20) messages.push('Username cannot exceed 20 characters');
+        if (!usernameRegex.test(value)) messages.push('Username can only contain letters, numbers, and underscores');
       }
 
       // DATABASE CHECK
@@ -453,8 +484,8 @@ export default {
         .then(data => {
           if (data.exists) {
             if (type === 'id') messages.push('This ID already exists!');
-            if (type === 'email') messages.push('This email is already registered!');
-            if (type === 'username') messages.push('This username already exists!');
+            if (type === 'email') messages.push('This email is already registered');
+            if (type === 'username') messages.push('This username already exists');
           }
           this.warnings = { ...this.warnings, [id]: messages };
         })
@@ -477,6 +508,7 @@ export default {
       const payload = {
         id: this.form.id,
         username: this.form.username,
+          email: this.form.email,
         password: this.form.password,
         profile: {
           firstName: this.form.firstName,
@@ -485,7 +517,6 @@ export default {
           suffix: this.form.suffix,
           birthdate: this.form.birthdate,
           age: this.form.age,
-          email: this.form.email,
           sex: this.form.sex
         },
         address: {
@@ -594,18 +625,6 @@ hr {
   width: 100%;
   justify-content: center;
   margin-top: 3em;
-}
-
-.btn {
-  border-radius: .9em;
-  padding: .8em 1.5em;
-  border: none;
-  background-color: #64d6a5;
-  box-shadow: 1px 1px 1px #00000095;
-  color: #3d3939;
-  text-transform: uppercase;
-  font-weight: 550;
-  font-size: .9em;
 }
 
 .btn[disabled] {

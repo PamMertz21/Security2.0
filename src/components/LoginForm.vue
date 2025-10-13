@@ -1,5 +1,5 @@
 <template>
-  <form action="" method="POST">
+  <form action="" method="POST" style="padding: 1em 3em .8em;">
     <h1>Login</h1>
 
     <!-- central warning container (shows all current field messages) -->
@@ -22,12 +22,11 @@
         <label for="password">Password:</label>
       </div>
     </div>
-    <div class="btn-container">
-        <button class="btn mb-4" type="submit">Login</button>
+    <div class="btn-container" style="margin-top: .4em;">
+        <button class="btn mb-4" type="submit">LOGIN</button>
     </div>
-    <div class="btn-container" style="margin-top: 1em;">
-      <button type="button" class="btn mb-4" @click="goToForgotPass()">Forgot Password</button>
-    </div>
+
+    <a v-if="consecutiveError >= 2" @click="goToForgotPass()">Forgot Password</a>
   </form>
 </template>
 
@@ -36,13 +35,33 @@
 export default {
   data(){
     return {
-
+      consecutiveError: 0,
+    }
+  },
+  computed: {
+    allWarnings() {
+      // flatten arrays and return non-empty trimmed messages
+      const vals = Object.values(this.warnings || {});
+      const flat = [];
+      for (const v of vals) {
+        if (Array.isArray(v)) {
+          for (const m of v) {
+            if (m && String(m).trim()) flat.push(String(m).trim());
+          }
+        } else if (v && String(v).trim()) {
+          flat.push(String(v).trim());
+        }
+      }
+      return flat;
     }
   },
   methods: {
     goToForgotPass() {
       // emit an event so the parent `App.vue` can switch pages
       this.$emit('go-forgot')
+    },
+    validatePassword() {
+
     }
   }
 }
@@ -56,6 +75,7 @@ form {
   align-items: center;
   justify-content: center;
   padding: 0em 2em;
+  gap: 1em;
 }
 
 h1 {
@@ -76,6 +96,9 @@ h1 {
 .form-group label {
   text-align: start;
   font-size: .8em;
+  display: flex;
+  align-items: center;
+  gap: .3em;
 }
 
 .form-group {
@@ -96,6 +119,10 @@ span {
   color: #da0303;
 }
 
+span.optional {
+  font-size: .8em;
+}
+
 /* button div */
 .btn-container {
   display: flex;
@@ -108,10 +135,16 @@ span {
   border-radius: .9em;
   padding: .8em 1.5em;
   border: none;
-  background-color: #5daa89;
+  background-color: #64d6a5;
   box-shadow: 1px 1px 1px #00000095;
-  color: #F1F0E4;
+  color: #3b3838;
+  text-transform: uppercase;
+  font-weight: 550;
   font-size: .9em;
+}
+
+a {
+  font-size: .8em;
 }
 
 /* error warning */

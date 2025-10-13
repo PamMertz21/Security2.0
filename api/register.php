@@ -15,7 +15,7 @@ $passwordHash = password_hash($input['password'], PASSWORD_BCRYPT);
 
 try {
   $pdo->beginTransaction();
-  $stmt = $pdo->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)');
+  $stmt = $pdo->prepare('INSERT INTO users (user_id, username, email, password_hash) VALUES (?, ?, ?)');
   $stmt->execute([$username, $email, $passwordHash]);
   $userId = (int)$pdo->lastInsertId();
 
