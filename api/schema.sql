@@ -37,3 +37,13 @@ CREATE TABLE IF NOT EXISTS addresses (
   zip VARCHAR(20) NULL,
   CONSTRAINT fk_addresses_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- Authentication/security questions per user
+CREATE TABLE IF NOT EXISTS user_security_questions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(9) NOT NULL,
+  question VARCHAR(255) NOT NULL,
+  answer_hash VARCHAR(255) NOT NULL,
+  CONSTRAINT fk_user_security_questions_user FOREIGN KEY (user_id)
+    REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
