@@ -4,7 +4,7 @@ USE security_app;
 
 -- Users hold credentials and login identifiers
 CREATE TABLE IF NOT EXISTS users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id VARCHAR(9) PRIMARY KEY,
   username VARCHAR(50) NOT NULL UNIQUE,
   email VARCHAR(120) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Profiles hold personal details captured during signup
 CREATE TABLE IF NOT EXISTS profiles (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
+  id VARCHAR(9) PRIMARY KEY,
+  user_id VARCHAR(9) NOT NULL,
   first_name VARCHAR(100) NOT NULL,
   middle_initial VARCHAR(10) NULL,
   last_name VARCHAR(100) NOT NULL,
@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 -- Addresses captured during signup
 CREATE TABLE IF NOT EXISTS addresses (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
+  id VARCHAR(9) PRIMARY KEY,
+  user_id VARCHAR(9) NOT NULL,
   purok VARCHAR(100) NULL,
   barangay VARCHAR(100) NULL,
   city VARCHAR(120) NULL,

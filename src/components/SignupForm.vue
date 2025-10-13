@@ -201,7 +201,7 @@ export default {
 
       try {
         // Use explicit Apache URL so the request reaches XAMPP even when dev server (Vite) is running on a different origin
-        const endpoint = 'http://localhost/Security/api/register.php';
+        const endpoint = 'http://localhost/Security2.0/api/register.php';
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
