@@ -113,18 +113,18 @@
 
           <!-- Password Strength Display -->
           <div v-if="form.password" class="password-strength">
-            <div class="strength-bar" :class="passwordStrengthClass"></div>
             <p class="strength-text">{{ passwordStrengthLabel }}</p>
+            <div class="strength-bar" :class="passwordStrengthClass"></div>
           </div>
         </div>
         <div class="form-group">
           <input type="password" id="repassword" name="repassword" v-model="form.repassword" required @input="validateConfirmPassword">
           <label for="repassword">Re-enter Password: <span>*</span></label>
         </div>
-        <div class="btn-container">
-          <button type="button" @click="step = 'address'" class="btn">Back</button>
-          <button type="button" @click="step = 'questions'" class="btn" :disabled="!canProceedAddress">Next</button>
-        </div>
+      </div>
+      <div class="btn-container">
+        <button type="button" @click="step = 'address'" class="btn">Back</button>
+        <button type="button" @click="step = 'questions'" class="btn" :disabled="!canProceedLogin">Next</button>
       </div>
     </div>
 
@@ -133,23 +133,78 @@
         <h3>Authentication Questions</h3>
       </div>
       <hr>
-      <div class="registration-box">
+      <div class="registration-box" style="display: flex; flex-direction: column; justify-content: center;">
         <div class="form-group">
-          <input type="text" id="user_id" name="user_id" v-model="form.id" required @input="checkID">
-          <label for="id">ID No. <span>*</span></label>
+          <div class="form-group">
+            <input type="text" id="answer1" v-model="form.answer1" required @input="validateAnswer">
+            <label for="answer1" class="question-label">Answer 1: <span>*</span></label>
+          </div>
+
+          <div class="form-group">
+            <select id="question1" v-model="form.question1" required>
+              <option disabled value="">-- Select a question --</option>
+              <option
+                v-for="(q, index) in questionList"
+                :key="'q1-' + index"
+                :value="q.choice"
+                :disabled="[form.question2, form.question3].includes(q.choice)"
+              >
+                {{ q.choice }}
+            </option>
+            </select>
+            <label for="question1" class="question-label">Question 1: <span>*</span></label>
+          </div>
         </div>
+
         <div class="form-group">
-          <input type="text" id="username" name="username" v-model="form.username" required @input="checkUsername">
-          <label for="username">Username: <span>*</span></label>
+          <div class="form-group">
+            <input type="text" id="answer2" v-model="form.answer2" required @input="validateAnswer">
+            <label for="answer2" class="question-label">Answer 2: <span>*</span></label>
+          </div>
+
+          <div class="form-group">
+            <select id="question2" v-model="form.question2" required>
+              <option disabled value="">-- Select a question --</option>
+              <option
+                  v-for="(q, index) in questionList"
+                  :key="'q1-' + index"
+                  :value="q.choice"
+                  :disabled="[form.question2, form.question3].includes(q.choice)"
+                >
+                  {{ q.choice }}
+              </option>
+            </select>
+            <label for="question2" class="question-label">Question 2: <span>*</span></label>
+          </div>
         </div>
+
         <div class="form-group">
-          <input type="password" id="repassword" name="repassword" v-model="form.repassword" required @input="validateConfirmPassword">
-          <label for="repassword">Re-enter Password: <span>*</span></label>
+          <div class="form-group">
+            <input type="text" id="answer3" v-model="form.answer3" required @input="validateAnswer">
+            <label for="answer3" class="question-label">Answer 3: <span>*</span></label>
+          </div>
+
+          <div class="form-group">
+            <select id="question3" v-model="form.question3" required>
+              <option disabled value="">-- Select a question --</option>
+              <option
+                  v-for="(q, index) in questionList"
+                  :key="'q1-' + index"
+                  :value="q.choice"
+                  :disabled="[form.question2, form.question3].includes(q.choice)"
+                >
+                  {{ q.choice }}
+              </option>
+            </select>
+            <label for="question3" class="question-label">Question 3: <span>*</span></label>
+          </div>
         </div>
       </div>
+
+
       <div class="btn-container">
         <button type="button" @click="step = 'login_details'" class="btn">Back</button>
-        <button type="submit" class="btn">Register</button>
+        <button type="submit" class="btn" :disabled="!canSubmitRegister">Register</button>
       </div>
     </div>
 </form>
@@ -162,6 +217,7 @@ export default {
       step: 'personal',
       ageWarning: '',
       warnings: {},
+      passwordStrengthScore: 0,
       form: {
         id: '',
         firstName: '',
@@ -180,8 +236,21 @@ export default {
         username: '',
         password: '',
         repassword: '',
-        email: ''
-      }
+        email: '',
+        question1: '',
+        answer1: '',
+        question2: '',
+        answer2: '',
+        question3: '',
+        answer3: ''
+      },
+      questionList: [
+        {choice: 'What is your favorite color?', value: 'What is your favorite color?'},
+        {choice: 'What is your favorite place?', value: 'What is your favorite place?'},
+        {choice:'What was the name of your first pet?', value: 'What was the name of your first pet?'},
+        {choice: 'What is your favorite movie or TV show?', value: 'What is your favorite movie or TV show?'},
+        {choice: 'What is your favorite book?', value: 'What is your favorite book?'},
+      ],
     }
   },
   computed: {
@@ -221,7 +290,51 @@ export default {
       );
       if (!filled) return false;
       return !this.hasFieldWarnings(['purok','barangay','city','province','country','zip']);
-    }
+    },
+    canProceedLogin() {
+      const f = this.form;
+      const filled =
+        f.id && String(f.id).trim() &&
+        f.username && String(f.username).trim() &&
+        f.password && String(f.password).trim() &&
+        f.repassword && String(f.repassword).trim();
+
+      if (!filled) return false;
+
+      // Make sure passwords match and fields have no warnings
+      if (f.password !== f.repassword) return false;
+
+      // Check if there are any warnings for these fields
+      return !this.hasFieldWarnings(['user_id', 'username', 'password', 'repassword']);
+    },
+    canProceedQuestions() {
+      const f = this.form;
+      return (
+        f.question1 && f.answer1.trim() &&
+        f.question2 && f.answer2.trim() &&
+        f.question3 && f.answer3.trim()
+      );
+    },
+    canSubmitRegister() {
+      // Combine all step validations
+      return (
+        this.canProceedPersonal &&
+        this.canProceedAddress &&
+        this.canProceedLogin &&
+        this.canProceedQuestions
+      );
+    },
+    passwordStrengthClass() {
+      if (this.passwordStrengthScore <= 1) return 'weak';
+      if (this.passwordStrengthScore === 2) return 'medium';
+      return 'strong';
+    },
+    passwordStrengthLabel() {
+      if (this.passwordStrengthScore <= 1) return 'Weak Password';
+      if (this.passwordStrengthScore === 2) return 'Medium Password';
+      return 'Strong Password';
+    },
+
   },
 
   methods: {
@@ -425,9 +538,32 @@ export default {
     validatePassword(evt) {
       const input = evt.target;
       const id = input.id;
+      const value = input.value;
       let messages = [];
       if (!input.value) { this.warnings[id] = []; return; }
-      if (Array.isArray(this.existingPassword) && this.existingPassword.includes(input.value)) messages.push('This password is already used!');
+
+      // Strength checks
+      const hasUpper = /[A-Z]/.test(value);
+      const hasLower = /[a-z]/.test(value);
+      const hasNumber = /\d/.test(value);
+      const hasSymbol = /[^A-Za-z0-9]/.test(value);
+      const isLong = value.length >= 8;
+
+      // Compute strength score
+      let score = 0;
+      if (isLong) score++;
+      if (hasUpper && hasLower) score++;
+      if (hasNumber) score++;
+      if (hasSymbol) score++;
+      this.passwordStrengthScore = score >= 4 ? 3 : score <= 1 ? 1 : 2; // Normalize to 1–3
+
+      // Validation messages
+      if (!isLong) messages.push('Password must be at least 8 characters long');
+      if (!hasUpper) messages.push('Password must include at least one uppercase letter');
+      if (!hasLower) messages.push('Password must include at least one lowercase letter');
+      if (!hasNumber) messages.push('Password must include at least one number');
+      if (!hasSymbol) messages.push('Password must include at least one special symbol');
+
       this.warnings[id] = messages;
     },
 
@@ -447,6 +583,16 @@ export default {
     },
     checkUsername(evt) {
       this.validateUniqueField(evt, 'username');
+    },
+
+    validateAnswer(evt) {
+      const value = evt.target.value.trim();
+      const id = evt.target.id;
+      let messages = [];
+      if (!value) messages.push('Answer cannot be empty.');
+      if (value.length < 2) messages.push('Answer too short.');
+      if (this.containsSymbol(value)) messages.push('Avoid using special symbols.');
+      this.warnings[id] = messages;
     },
 
     // keep your existing validateUniqueField method as-is
@@ -526,7 +672,12 @@ export default {
           province: this.form.province,
           country: this.form.country,
           zip: this.form.zip
-        }
+        },
+        security: [
+          { question: this.form.question1, answer: this.form.answer1 },
+          { question: this.form.question2, answer: this.form.answer2 },
+          { question: this.form.question3, answer: this.form.answer3 }
+        ]
       };
 
       try {
@@ -624,7 +775,6 @@ hr {
   gap: 1em;
   width: 100%;
   justify-content: center;
-  margin-top: 3em;
 }
 
 .btn[disabled] {
@@ -642,4 +792,39 @@ a {
   text-decoration: none;
   color: #F1F0E4;
 }
+
+.password-strength {
+  margin-top: 0.5em;
+  width: 90%;
+  align-self: center;
+}
+
+.strength-bar {
+  height: 6px;
+  border-radius: 4px;
+  margin-bottom: 0.3em;
+  transition: background-color 0.3s, width 0.3s;
+  width: 100%;
+}
+
+.strength-bar.weak {
+  background-color: #e74c3c;
+  width: 33%;
+}
+.strength-bar.medium {
+  background-color: #f1c40f;
+  width: 66%;
+}
+.strength-bar.strong {
+  background-color: #2ecc71;
+  width: 100%;
+}
+
+.strength-text {
+  font-size: 0.85em;
+  text-align: left;
+  margin-left: 0.5em;
+  font-weight: 500;
+}
+
 </style>

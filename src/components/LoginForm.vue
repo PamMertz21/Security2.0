@@ -115,6 +115,10 @@ h1 {
   border: 1px solid #111;
 }
 
+.question-label {
+  padding-left: 1%;
+}
+
 span {
   color: #da0303;
 }
@@ -129,6 +133,7 @@ span.optional {
   gap: 1em;
   width: 100%;
   justify-content: center;
+  margin-top: .5em;
 }
 
 .btn {
