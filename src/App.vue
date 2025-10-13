@@ -150,6 +150,7 @@ main {
   justify-content: center;
   align-items: center;
   padding: 0;
+  user-select: none;
 }
 
 .logo-container {
@@ -184,7 +185,7 @@ main {
   justify-content: center;
   align-items: center;
   height: 90%;
-  border-left: 1px solid grey;
+  border-left: 1px solid rgb(241, 241, 241);
 }
 
 .form-box {
