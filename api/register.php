@@ -70,9 +70,9 @@ try {
   $pdo->rollBack();
   if ($e->getCode() === '23000') { // unique violation
     http_response_code(409);
-    echo json_encode(['error' => 'Username or email already exists']);
+    echo json_encode(['error' => 'Username or email already exists', 'debug' => $e->getMessage()]);
   } else {
     http_response_code(500);
-    echo json_encode(['error' => 'Registration failed']);
+    echo json_encode(['error' => 'Registration failed', 'debug' => $e->getMessage()]);
   }
 }

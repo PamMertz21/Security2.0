@@ -1,7 +1,5 @@
 <?php
-require 'db.php';
-
-// Enable CORS and JSON headers
+require __DIR__.'/db.php';
 cors_json_headers();
 
 // Read POSTed JSON
@@ -13,7 +11,7 @@ $value = $data['value'] ?? '';
 $response = ['exists' => false];
 
 // Validate input type
-$allowedTypes = ['id' => 'id_number', 'email' => 'email', 'username' => 'username'];
+$allowedTypes = ['id' => 'id', 'email' => 'email', 'username' => 'username'];
 if (!array_key_exists($type, $allowedTypes)) {
     echo json_encode($response);
     exit;
