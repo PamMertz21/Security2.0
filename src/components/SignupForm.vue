@@ -169,7 +169,7 @@
                   v-for="(q, index) in questionList"
                   :key="'q1-' + index"
                   :value="q.choice"
-                  :disabled="[form.question2, form.question3].includes(q.choice)"
+                  :disabled="[form.question1, form.question3].includes(q.choice)"
                 >
                   {{ q.choice }}
               </option>
@@ -191,7 +191,7 @@
                   v-for="(q, index) in questionList"
                   :key="'q1-' + index"
                   :value="q.choice"
-                  :disabled="[form.question2, form.question3].includes(q.choice)"
+                  :disabled="[form.question1, form.question2, form.question3].includes(q.choice)"
                 >
                   {{ q.choice }}
               </option>

@@ -11,7 +11,8 @@ export default {
     Login,
     Home,
     Dashboard,
-    ForgotPassword
+    ForgotPassword,
+
   },
   data() {
     return {
@@ -54,7 +55,7 @@ export default {
     </header>
 
     <main>
-      <div class="page-container" v-if="page === 'signup' || page === 'login'">
+      <div class="page-container" v-if="page === 'signup' || page === 'login' || page === 'forgot'">
         <div class="logo-container">
           <div class="mask">
             <img src="./assets/images/icon.png" alt=" Logo">
@@ -63,8 +64,11 @@ export default {
         <div class="form-container">
           <div class="form-box">
             <Signup v-if="page === 'signup'" @go-login="page = 'login'"/>
-            <Login v-else-if="page === 'login'" @go-forgot="page = 'forgot'"/>
-            <ForgotPassword v-else-if="page === 'forgot'"/>
+            <Login v-else-if="page === 'login'"
+              @go-dashboard="page = 'dashboard'"
+              @go-forgot="page = 'forgot'"
+            />
+            <ForgotPassword class="page-container" v-if="page === 'forgot'" />
           </div>
         </div>
       </div>
@@ -76,6 +80,7 @@ export default {
       <div class="page-container" v-if="page === 'home'">
         <Home/>
       </div>
+
     </main>
 
     <footer>
