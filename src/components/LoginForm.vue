@@ -146,7 +146,7 @@ export default {
 
         // success
         localStorage.setItem("user", JSON.stringify(data.user));
-        this.$emit('go-dashboard');
+        this.$router.push('/dashboard');
         this.consecutiveError = 0;
 
       } catch (error) {
@@ -156,15 +156,8 @@ export default {
     },
     goToForgotPass() {
       // notify parent to show the forgot password view
-      this.$emit('go-forgot');
+      this.$router.push('/forgot');
     }
-  },
-  mounted() {
-    // Push a dummy history state
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", () => {
-      window.history.pushState(null, "", window.location.href);
-    });
   }
 }
 </script>

@@ -705,7 +705,7 @@ export default {
         }
         // success
         alert('Registration successful');
-        this.$emit('go-login');
+        this.$router.push('/login');
       } catch (err) {
         console.error(err);
         alert('Network or server error');

@@ -1,6 +1,5 @@
 <template>
   <form @submit.prevent="submitReset">
-    <template>
       <h1>Forgot Password</h1>
 
       <div class="form-group">
@@ -9,10 +8,7 @@
       </div>
 
       <button type="submit">Send Reset Link</button>
-
-      <p v-if="message" class="msg">{{ message }}</p>
-    </template>
-  </form>
+    </form>
 </template>
 
 <script>
@@ -56,10 +52,9 @@ export default {
 </script>
 
 <style scoped>
-form {
+.forgot-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 1em;
   align-items: center;
   justify-content: center;
 }

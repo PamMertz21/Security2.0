@@ -12,13 +12,25 @@ const routes = [
   { path: '/login', name: 'login', component: LoginForm },
   { path: '/signup', name: 'signup', component: SignupForm },
   { path: '/dashboard', name: 'dashboard', component: Dashboard },
-  { path: '/forgot-password', name: 'forgot-password', component: ForgotPassword }
+  { path: '/forgot', name: 'forgot', component: ForgotPassword }
 ];
 
 // Use Vite's base (set in vite.config.js) for history so router works when app is served from /Security/
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
+});
+
+// disable back button only when user is on login
+router.afterEach((to) => {
+  if (to.name === 'login') {
+    history.pushState(null, document.title, location.href);
+    window.onpopstate = () => {
+      history.pushState(null, document.title, location.href);
+    };
+  } else {
+    window.onpopstate = null;
+  }
 });
 
 export default router;
