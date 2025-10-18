@@ -50,7 +50,10 @@
         </button>
     </div>
 
-    <a v-if="consecutiveError >= 2" @click="goToForgotPass()">Forgot Password</a>
+    <a v-if="consecutiveError >= 2"
+      @click="!lockoutActive && goToForgotPass()"
+      :class="{ disabled: lockoutActive }"
+    >Forgot Password</a>
   </form>
 </template>
 
@@ -103,6 +106,14 @@ export default {
         }
       }, 1000);
     },
+    disableButton() {
+      if (this.consecutiveError % 3 === 0) {
+        let lockoutTime = 15; // first 3 errors
+        if (this.consecutiveError === 6) lockoutTime = 30;
+        else if (this.consecutiveError >= 9) lockoutTime = 60;
+        this.startLockout(lockoutTime);
+      }
+},
     async login() {
       this.warnings = {};
       const username = document.getElementById("username").value.trim();
@@ -134,12 +145,7 @@ export default {
             this.warnings.general = [data.error || "Login failed."];
           }
 
-          if (this.consecutiveError % 3 === 0) {
-            let lockoutTime = 15; // first 3 errors
-            if (this.consecutiveError === 6) lockoutTime = 30;
-            else if (this.consecutiveError >= 9) lockoutTime = 60;
-            this.startLockout(lockoutTime);
-          }
+          this.disableButton();
 
           return;
         }
@@ -298,6 +304,7 @@ a {
   width: 1.2em;
   height: 1.2em;
   color: #3d3d3d;
+  background-color: white;
 }
 
 .eye-icon:hover {
@@ -309,4 +316,46 @@ a {
   cursor: not-allowed;
   box-shadow: none;
 }
+
+a.disabled {
+  pointer-events: none;
+  color: gray;
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+.password-strength {
+  margin-top: 0.5em;
+  width: 100%;
+  align-self: center;
+}
+
+.strength-bar {
+  height: 6px;
+  border-radius: 4px;
+  margin-bottom: 0.3em;
+  transition: background-color 0.3s, width 0.3s;
+  width: 100%;
+}
+
+.strength-bar.weak {
+  background-color: #e74c3c;
+  width: 33%;
+}
+.strength-bar.medium {
+  background-color: #f1c40f;
+  width: 66%;
+}
+.strength-bar.strong {
+  background-color: #2ecc71;
+  width: 100%;
+}
+
+.strength-text {
+  font-size: 0.85em;
+  text-align: left;
+  margin-left: 0.5em;
+  font-weight: 500;
+}
+
 </style>
