@@ -17,6 +17,14 @@
         <div class="header">
           <h3>Authentication Questions</h3>
         </div>
+        <div class="warning-container" v-if="allWarnings.length">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+          </svg>
+          <ul>
+            <li v-for="(msg, idx) in allWarnings" :key="idx" class="warning">{{ msg }}</li>
+          </ul>
+        </div>
         <hr>
         <div class="registration-box" style="display: flex; flex-direction: column; justify-content: center;">
           <div class="form-group">
@@ -26,17 +34,7 @@
             </div>
 
             <div class="form-group">
-              <select id="question1" v-model="form.question1" required>
-                <option disabled value="">-- Select a question --</option>
-                <option
-                  v-for="(q, index) in questionList"
-                  :key="'q1-' + index"
-                  :value="q.choice"
-                  :disabled="[form.question2, form.question3].includes(q.choice)"
-                >
-                  {{ q.choice }}
-              </option>
-              </select>
+              <input type="text" id="question1" v-model="form.question1" disabled class="question-display" />
               <label for="question1" class="question-label">Question 1: <span>*</span></label>
             </div>
           </div>
@@ -48,17 +46,7 @@
             </div>
 
             <div class="form-group">
-              <select id="question2" v-model="form.question2" required>
-                <option disabled value="">-- Select a question --</option>
-                <option
-                    v-for="(q, index) in questionList"
-                    :key="'q2-' + index"
-                    :value="q.choice"
-                    :disabled="[form.question1, form.question3].includes(q.choice)"
-                  >
-                    {{ q.choice }}
-                </option>
-              </select>
+              <input type="text" id="question2" v-model="form.question2" disabled class="question-display" />
               <label for="question2" class="question-label">Question 2: <span>*</span></label>
             </div>
           </div>
@@ -70,17 +58,7 @@
           </div>
 
           <div class="form-group">
-            <select id="question3" v-model="form.question3" required>
-              <option disabled value="">-- Select a question --</option>
-              <option
-                  v-for="(q, index) in questionList"
-                  :key="'q3-' + index"
-                  :value="q.choice"
-                  :disabled="[form.question1, form.question2].includes(q.choice)"
-                >
-                  {{ q.choice }}
-              </option>
-            </select>
+            <input type="text" id="question3" v-model="form.question3" disabled class="question-display" />
             <label for="question3" class="question-label">Question 3: <span>*</span></label>
           </div>
         </div>
@@ -169,15 +147,15 @@
       </div>
 
       <div class="form-content" v-if="step === 4">
-        <ChangePassword/>
+        <ChangePassword :email="email" ref="changePasswordComponent"/>
       </div>
 
       <div class="btn-container" v-if="step === 1">
-        <button type="submit" @click="step = 2" class="btn" :disabled="!email.trim()">Next</button>
+        <button type="button" @click="fetchQuestions" class="btn" :disabled="!email.trim()">Next</button>
       </div>
 
       <div class="btn-container" v-if="step === 2">
-        <button type="button" @click="step = 1" class="btn">Back</button>
+        <button type="button" @click="resetQuestionsAndBack" class="btn">Back</button>
         <button type="submit" @click="goToStep3" class="btn" :disabled="!isStep2Valid">Next</button>
       </div>
 
@@ -188,7 +166,7 @@
 
       <div class="btn-container" v-if="step === 4">
         <button type="button" @click="step = 2" class="btn">Back</button>
-        <button type="submit" class="btn">Change Password</button>
+        <button type="button" @click="handleChangePassword" class="btn">Change Password</button>
       </div>
     </form>
 </template>
@@ -204,7 +182,10 @@ export default {
     return {
       warnings: {},
       email: '',
+      emailValid: true,
       message: '',
+          userId: null,
+          questionsLoaded: false,
       step: 1,
       warningMessage: '',
       form: {
@@ -269,6 +250,14 @@ export default {
       // Returns true if any non-alphanumeric (except space) characters are found
       return /[^a-zA-Z0-9\s]/.test(value);
     },
+    validateEmail() {
+      const val = (this.email || '').trim();
+      // simple email regex
+      const re = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+      this.emailValid = re.test(val);
+      this.warnings.email = this.emailValid ? [] : ['Please enter a valid email address.'];
+      return this.emailValid;
+    },
     validateAnswer(evt) {
       const value = evt.target.value.trim();
       const id = evt.target.id;
@@ -297,9 +286,9 @@ export default {
       const o = this.originalAnswers;
 
       if (
-        f.answer1.trim() !== o.answer1 ||
-        f.answer2.trim() !== o.answer2 ||
-        f.answer3.trim() !== o.answer3
+        f.answer1.trim() !== o.answer1.trim() ||
+        f.answer2.trim() !== o.answer2.trim() ||
+        f.answer3.trim() !== o.answer3.trim()
       ) {
         this.warningMessage = 'Your re-entered answers do not match the previous ones.';
         return; // stop here, don’t move forward
@@ -308,9 +297,35 @@ export default {
       this.warningMessage = ''; // clear any old warning
       this.step = 4; // move to change password
     },
+    async handleChangePassword() {
+      const child = this.$refs.changePasswordComponent;
+      if (!child || !child.submitChange) {
+        this.message = 'Unable to change password: component not available.';
+        return;
+      }
+
+      this.message = 'Submitting new password...';
+      const result = await child.submitChange();
+
+      if (!result.ok) {
+        this.message = result.error || 'Failed to change password.';
+        return;
+      }
+
+      this.message = (result.data && result.data.message) || 'Password changed successfully.';
+      // Optionally reset steps or redirect to login
+      this.step = 1;
+      this.email = '';
+    },
     async submitReset() {
       if (!this.email.trim()) {
         this.message = 'Please enter your email address.';
+        this.emailValid = false;
+        return;
+      }
+
+      if (!this.validateEmail()) {
+        this.message = 'Please enter a valid email address.';
         return;
       }
 
@@ -333,6 +348,62 @@ export default {
         console.error(err);
         this.message = 'Network error occurred.';
       }
+    }
+    ,
+    // Fetch security questions for the supplied email
+    async fetchQuestions() {
+      this.message = '';
+      if (!this.email.trim()) {
+        this.message = 'Please enter your email address.';
+        return;
+      }
+      if (!this.validateEmail()) {
+        this.message = 'Please enter a valid email address.';
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost/Security2.0/api/get_security_questions.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: this.email })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          this.message = data.error || 'Unable to fetch security questions for this email.';
+          return;
+        }
+
+        if (!data.questions || !Array.isArray(data.questions)) {
+          this.message = 'No security questions returned.';
+          return;
+        }
+
+        // Populate questionList with returned questions
+        this.questionList = data.questions.map(q => ({ choice: q, value: q }));
+        this.userId = data.user_id || null;
+
+        // Auto-select the three questions for the form so user doesn't need to pick
+        this.form.question1 = data.questions[0] || '';
+        this.form.question2 = data.questions[1] || '';
+        this.form.question3 = data.questions[2] || '';
+        this.questionsLoaded = true;
+        this.message = '';
+        this.step = 2;
+      } catch (err) {
+        console.error(err);
+        this.message = 'Network error while fetching questions.';
+      }
+    }
+    ,
+    resetQuestionsAndBack() {
+      this.questionsLoaded = false;
+      this.form.question1 = '';
+      this.form.question2 = '';
+      this.form.question3 = '';
+      this.step = 1;
     }
   }
 };

@@ -1,9 +1,14 @@
 <template>
   <h1>Change Password</h1>
 
-  <!-- Central warning container -->
-  <div v-if="error" class="error-message">{{ error }}</div>
-  <div v-if="success" class="success-message">{{ success }}</div>
+    <div class="warning-container" v-if="warnings.confirmPassword && warnings.confirmPassword.length">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+      </svg>
+      <ul>
+        <li class="warning">{{ warnings.confirmPassword[0] }}</li>
+      </ul>
+  </div>
 
   <div v-if="newPassword" class="password-strength-container">
     <p class="strength-text">{{ passwordStrengthLabel }}</p>
@@ -11,9 +16,6 @@
       <div class="strength-bar-fill" :class="passwordStrengthClass" :style="{ width: strengthWidth }"></div>
     </div>
   </div>
-  <p v-if="warnings.confirmPassword && warnings.confirmPassword.length" class="warning-text">
-    {{ warnings.confirmPassword[0] }}
-  </p>
 
   <!-- New Password -->
   <div class="form-group password-group">
@@ -106,6 +108,13 @@
 
 <script>
 export default {
+  props: {
+    email: {
+      type: String,
+      required: false,
+      default: ''
+    }
+  },
   data() {
     return {
       newPassword: "",
@@ -141,12 +150,18 @@ export default {
     togglePassword(field) {
       if (field === "new") this.showNewPassword = !this.showNewPassword;
       if (field === "confirm") this.showConfirmPassword = !this.showConfirmPassword;
-    },validatePassword(evt) {
+    },
+
+    validatePassword(evt) {
       const input = evt.target;
-      const id = input.id;
       const value = input.value;
       let messages = [];
-      if (!input.value) { this.warnings[id] = []; return; }
+
+      if (!value) {
+        this.warnings.newPassword = [];
+        this.passwordStrengthScore = 0;
+        return;
+      }
 
       // Strength checks
       const hasUpper = /[A-Z]/.test(value);
@@ -161,25 +176,55 @@ export default {
       if (hasUpper && hasLower) score++;
       if (hasNumber) score++;
       if (hasSymbol) score++;
-      this.passwordStrengthScore = score >= 4 ? 3 : score <= 1 ? 1 : 2; // Normalize to 1–3
+      this.passwordStrengthScore = score >= 4 ? 3 : score <= 1 ? 1 : 2;
 
       // Validation messages
-      if (!isLong) messages.push('Password must be at least 8 characters long');
-      if (!hasUpper) messages.push('Password must include at least one uppercase letter');
-      if (!hasLower) messages.push('Password must include at least one lowercase letter');
-      if (!hasNumber) messages.push('Password must include at least one number');
-      if (!hasSymbol) messages.push('Password must include at least one special symbol');
+      if (!isLong) messages.push("Password must be at least 8 characters long");
+      if (!hasUpper) messages.push("Password must include at least one uppercase letter");
+      if (!hasLower) messages.push("Password must include at least one lowercase letter");
+      if (!hasNumber) messages.push("Password must include at least one number");
+      if (!hasSymbol) messages.push("Password must include at least one special symbol");
 
-      this.warnings[id] = messages;
+      this.warnings.newPassword = messages;
     },
 
-    validateConfirmPassword(evt) {
-      const input = evt.target;
-      const id = input.id;
+    validateConfirmPassword() {
       let messages = [];
-      if (this.form.password !== input.value) messages.push('Password do not match');
-      this.warnings[id] = messages;
+      if (this.confirmPassword && this.confirmPassword !== this.newPassword) {
+        messages.push("Passwords do not match");
+      }
+      this.warnings.confirmPassword = messages;
     },
+    async submitChange() {
+      // run validations
+      this.validatePassword({ target: { value: this.newPassword } });
+      this.validateConfirmPassword();
+
+      if ((this.warnings.newPassword && this.warnings.newPassword.length) || (this.warnings.confirmPassword && this.warnings.confirmPassword.length)) {
+        return { ok: false, error: 'Fix validation errors before submitting.' };
+      }
+
+      // basic email validation
+      const emailVal = (this.email || '').trim();
+      const re = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+      if (!emailVal || !re.test(emailVal)) {
+        return { ok: false, error: 'Valid email not provided.' };
+      }
+
+      try {
+        const res = await fetch('/Security2.0/api/reset_password.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailVal, new_password: this.newPassword })
+        });
+
+        const data = await res.json();
+        if (!res.ok) return { ok: false, error: data.error || 'Server error' };
+        return { ok: true, data };
+      } catch  {
+        return { ok: false, error: 'Network error' };
+      }
+    }
   },
 };
 </script>

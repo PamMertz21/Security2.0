@@ -91,6 +91,7 @@ header {
   align-items: center;
   padding: 1em 1.5em;
   background-color: var(--color-accent);
+  user-select: none;
 }
 
 .portal {
@@ -196,12 +197,13 @@ main {
 }
 
 footer {
-  color: #716C6C;
+  color: #f0f0f0;
   margin-top: auto;
   text-align: center;
-  background-color: #ADEDAD;
+  background-color: #5e945e;
   padding: .5em;
   font-size: .8em;
+  user-select: none;
 }
 
 .footer-portal {
