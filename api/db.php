@@ -11,6 +11,7 @@ function cors_json_headers() {
   header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
   header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
   header('Access-Control-Allow-Credentials: true');
+  header('Access-Control-Max-Age: 86400');
 
   if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -27,6 +28,8 @@ try {
   ]);
 } catch (PDOException $e) {
   http_response_code(500);
-  echo json_encode(['error' => 'Database connection failed']);
-  exit;
+  echo json_encode([
+    'error' => 'Database error',
+    'details' => $e->getMessage()
+  ]);
 }

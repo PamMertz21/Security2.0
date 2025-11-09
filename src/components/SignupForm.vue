@@ -276,7 +276,7 @@ export default {
       const filled = Boolean(f.firstName && String(f.firstName).trim() && f.lastName && String(f.lastName).trim() && f.birthdate && f.email && String(f.email).trim());
       if (!filled) return false;
       // check field-specific warnings (use input ids)
-      return !this.hasFieldWarnings(['fname','lname','birthdate','email','age']);
+      return !this.hasFieldWarnings(['fname','mname', 'lname', 'suffix', 'birthdate','email','age']);
     },
     canProceedAddress() {
       const f = this.form;

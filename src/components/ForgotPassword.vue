@@ -6,9 +6,18 @@
           <h3>Account Detail</h3>
         </div>
         <hr>
+        <div class="warning-container" v-if="warnings.idNumber && warnings.idNumber.length">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+          </svg>
+          <ul>
+            <li v-for="(msg, idx) in warnings.idNumber" :key="idx" class="warning">{{ msg }}</li>
+          </ul>
+        </div>
+
         <div class="form-group" style="width: 90%;">
-          <input type="text" v-model="email" id="email" name="email">
-          <label for="email">Email:</label>
+          <input type="text" v-model="idNumber" id="idNumber" name="idNumber" @input="validateIdNumber">
+          <label for="idNumber">ID Number:</label>
         </div>
       </div>
 
@@ -17,6 +26,7 @@
         <div class="header">
           <h3>Authentication Questions</h3>
         </div>
+        <hr>
         <div class="warning-container" v-if="allWarnings.length">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
@@ -25,8 +35,7 @@
             <li v-for="(msg, idx) in allWarnings" :key="idx" class="warning">{{ msg }}</li>
           </ul>
         </div>
-        <hr>
-        <div class="registration-box" style="display: flex; flex-direction: column; justify-content: center;">
+        <div class="registration-box">
           <div class="form-group">
             <div class="form-group">
               <input type="text" id="answer1" v-model="form.answer1" required @input="validateAnswer">
@@ -50,17 +59,17 @@
               <label for="question2" class="question-label">Question 2: <span>*</span></label>
             </div>
           </div>
-        </div>
-        <div class="form-group">
-          <div class="form-group">
-            <input type="text" id="answer3" v-model="form.answer3" required @input="validateAnswer">
-            <label for="answer3" class="question-label">Answer 3: <span>*</span></label>
-          </div>
+            <div class="form-group">
+              <div class="form-group">
+                <input type="text" id="answer3" v-model="form.answer3" required @input="validateAnswer">
+                <label for="answer3" class="question-label">Answer 3: <span>*</span></label>
+              </div>
 
-          <div class="form-group">
-            <input type="text" id="question3" v-model="form.question3" disabled class="question-display" />
-            <label for="question3" class="question-label">Question 3: <span>*</span></label>
-          </div>
+              <div class="form-group">
+                <input type="text" id="question3" v-model="form.question3" disabled class="question-display" />
+                <label for="question3" class="question-label">Question 3: <span>*</span></label>
+              </div>
+            </div>
         </div>
       </div>
 
@@ -78,7 +87,7 @@
             <li v-for="(msg, idx) in allWarnings" :key="idx" class="warning">{{ msg }}</li>
           </ul>
         </div>
-        <div class="registration-box" style="display: flex; flex-direction: column; justify-content: center;">
+        <div class="registration-box">
           <div class="form-group">
             <div class="form-group">
               <input type="text" id="answer1" v-model="form.answer1" required @input="validateAnswer">
@@ -122,41 +131,52 @@
               <label for="question2" class="question-label">Question 2: <span>*</span></label>
             </div>
           </div>
-        </div>
-        <div class="form-group">
           <div class="form-group">
-            <input type="text" id="answer3" v-model="form.answer3" required @input="validateAnswer">
-            <label for="answer3" class="question-label">Answer 3: <span>*</span></label>
-          </div>
+            <div class="form-group">
+              <input type="text" id="answer3" v-model="form.answer3" required @input="validateAnswer">
+              <label for="answer3" class="question-label">Answer 3: <span>*</span></label>
+            </div>
 
-          <div class="form-group">
-            <select id="question3" v-model="form.question3" required disabled>
-              <option disabled value="">-- Select a question --</option>
-              <option
-                  v-for="(q, index) in questionList"
-                  :key="'q3-' + index"
-                  :value="q.choice"
-                  :disabled="[form.question1, form.question2].includes(q.choice)"
-                >
-                  {{ q.choice }}
-              </option>
-            </select>
-            <label for="question3" class="question-label">Question 3: <span>*</span></label>
+            <div class="form-group">
+              <select id="question3" v-model="form.question3" required disabled>
+                <option disabled value="">-- Select a question --</option>
+                <option
+                    v-for="(q, index) in questionList"
+                    :key="'q3-' + index"
+                    :value="q.choice"
+                    :disabled="[form.question1, form.question2].includes(q.choice)"
+                  >
+                    {{ q.choice }}
+                </option>
+              </select>
+              <label for="question3" class="question-label">Question 3: <span>*</span></label>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="form-content" v-if="step === 4">
-        <ChangePassword :email="email" ref="changePasswordComponent"/>
+        <ChangePassword :id-number="idNumber" ref="changePasswordComponent"/>
       </div>
 
       <div class="btn-container" v-if="step === 1">
-        <button type="button" @click="fetchQuestions" class="btn" :disabled="!email.trim()">Next</button>
+        <button type="button"
+          @click="() => { if (validateIdNumber()) fetchQuestions(); }"
+          class="btn"
+          :disabled="!isIdValid">
+          Next
+        </button>
       </div>
 
       <div class="btn-container" v-if="step === 2">
         <button type="button" @click="resetQuestionsAndBack" class="btn">Back</button>
-        <button type="submit" @click="goToStep3" class="btn" :disabled="!isStep2Valid">Next</button>
+        <button type="submit"
+          @click="goToStep3"
+          class="btn"
+          :disabled="!isStep2Valid || isStep2Loading"
+        >
+          Next
+        </button>
       </div>
 
       <div class="btn-container" v-if="step === 3">
@@ -165,7 +185,7 @@
       </div>
 
       <div class="btn-container" v-if="step === 4">
-        <button type="button" @click="step = 2" class="btn">Back</button>
+        <button type="button" @click="step = 3" class="btn">Back</button>
         <button type="button" @click="handleChangePassword" class="btn">Change Password</button>
       </div>
     </form>
@@ -180,9 +200,9 @@ export default {
   },
   data() {
     return {
+      isStep2Loading: false,
       warnings: {},
-      email: '',
-      emailValid: true,
+      idNumber: '',
       message: '',
           userId: null,
           questionsLoaded: false,
@@ -211,6 +231,12 @@ export default {
     };
   },
   computed: {
+    isIdValid() {
+      return (
+        this.idNumber.trim() !== '' &&
+        (!this.warnings.idNumber || this.warnings.idNumber.length === 0)
+      );
+    },
     allWarnings() {
       // flatten arrays and return non-empty trimmed messages
       const vals = Object.values(this.warnings || {});
@@ -234,6 +260,8 @@ export default {
         f.question3 && f.answer3.trim()
       );
     },
+
+    // Step 3 to Step 4: validations if answers have been modified
     isStep3Valid() {
       const f = this.form;
       const o = this.originalAnswers;
@@ -250,6 +278,22 @@ export default {
       // Returns true if any non-alphanumeric (except space) characters are found
       return /[^a-zA-Z0-9\s]/.test(value);
     },
+
+    validateIdNumber() {
+      const value = this.idNumber.trim();
+      const messages = [];
+
+      if (!value) {
+        messages.push('ID number cannot be empty.');
+      } else if (!/^\d{4}-\d{4}$/.test(value)) {
+        messages.push('ID must be in the format 0000-0000!');
+      }
+
+      this.warnings.idNumber = messages;
+      return messages.length === 0;
+    },
+
+/*
     validateEmail() {
       const val = (this.email || '').trim();
       // simple email regex
@@ -258,6 +302,7 @@ export default {
       this.warnings.email = this.emailValid ? [] : ['Please enter a valid email address.'];
       return this.emailValid;
     },
+ */
     validateAnswer(evt) {
       const value = evt.target.value.trim();
       const id = evt.target.id;
@@ -266,18 +311,56 @@ export default {
       if (value.length < 2 && value.length != 1) messages.push('Answer too short.');
       if (this.containsSymbol(value)) messages.push('Avoid using special symbols.');
       this.warnings[id] = messages;
+      this.isStep2Loading = false;
     },
-    goToStep3() {
-      this.originalAnswers = {
-        answer1: this.form.answer1.trim(),
-        answer2: this.form.answer2.trim(),
-        answer3: this.form.answer3.trim()
-      };
-      this.form.answer1 = '';
-      this.form.answer2 = '';
-      this.form.answer3 = '';
-      this.warningMessage = '';
-      this.step = 3;
+
+    async goToStep3() {
+      this.isStep2Loading = true;
+      this.warnings.server = [];
+
+      try {
+        const res = await fetch('http://localhost/Security2.0/api/verify_security_answers.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_number: this.idNumber,
+            answer1: this.form.answer1,
+            answer2: this.form.answer2,
+            answer3: this.form.answer3
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.match) {
+          this.warnings.server = ['Your answers do not match our records.'];
+
+          // Disable the Next button because of error
+           this.isStep2Loading = true;
+          return; // stop — do not proceed
+        }
+
+        // Save original answers only if they match the DB
+        this.originalAnswers = {
+          answer1: this.form.answer1.trim(),
+          answer2: this.form.answer2.trim(),
+          answer3: this.form.answer3.trim()
+        };
+
+        this.form.answer1 = '';
+        this.form.answer2 = '';
+        this.form.answer3 = '';
+        this.warnings.server = [];
+        this.step = 3;
+      } catch (err) {
+        console.error(err);
+        this.warnings.server = ['Network or server error occurred.'];
+      } finally {
+        // Re-enable only if there’s no warning
+        if (!this.warnings.server.length) {
+          this.isStep2Loading = false;
+        }
+      }
     },
 
     // ✅ Step 3 → Step 4: Show warning if answers don’t match
@@ -298,34 +381,42 @@ export default {
       this.step = 4; // move to change password
     },
     async handleChangePassword() {
+      // Validate ID number format before proceeding
+      if (!this.validateIdNumber()) {
+        this.message = 'Please enter a valid ID number in the format 0000-0000.';
+        return;
+      }
+
       const child = this.$refs.changePasswordComponent;
       if (!child || !child.submitChange) {
         this.message = 'Unable to change password: component not available.';
         return;
       }
 
-      this.message = 'Submitting new password...';
-      const result = await child.submitChange();
+      try {
+        //  Call child ChangePassword component
+        const result = await child.submitChange();
 
-      if (!result.ok) {
-        this.message = result.error || 'Failed to change password.';
-        return;
+        if (!result || !result.ok) {
+          this.message = result?.error || 'Failed to change password.';
+          return;
+        }
+
+        this.message = result.data?.message || 'Password changed successfully.';
+
+        // Reset form after success
+        this.step = 1;
+        this.idNumber = '';
+        this.warnings.idNumber = [];
+      } catch (err) {
+        console.error(err);
+        this.message = 'Unexpected error occurred.';
       }
-
-      this.message = (result.data && result.data.message) || 'Password changed successfully.';
-      // Optionally reset steps or redirect to login
-      this.step = 1;
-      this.email = '';
     },
-    async submitReset() {
-      if (!this.email.trim()) {
-        this.message = 'Please enter your email address.';
-        this.emailValid = false;
-        return;
-      }
 
-      if (!this.validateEmail()) {
-        this.message = 'Please enter a valid email address.';
+    async submitReset() {
+      if (!this.idNumber.trim()) {
+        this.message = 'Please enter your ID number.';
         return;
       }
 
@@ -333,32 +424,31 @@ export default {
         const res = await fetch('http://localhost/Security2.0/api/forgot_password.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: this.email })
+          body: JSON.stringify({ id_number: this.idNumber })
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-          this.message = data.error || 'Unable to send reset link.';
+          this.message = data.error || 'Unable to send reset request.';
           return;
         }
 
-        this.message = 'A reset link has been sent to your email.';
+        this.message = 'Password reset initiated successfully.';
       } catch (err) {
         console.error(err);
         this.message = 'Network error occurred.';
       }
     }
+
     ,
-    // Fetch security questions for the supplied email
+    // Fetch security questions for the supplied id
     async fetchQuestions() {
       this.message = '';
-      if (!this.email.trim()) {
-        this.message = 'Please enter your email address.';
-        return;
-      }
-      if (!this.validateEmail()) {
-        this.message = 'Please enter a valid email address.';
+      this.warnings.idNumber = []; // clear old warnings
+
+      if (!this.validateIdNumber()) {
+        this.warnings.idNumber = ['Please enter your ID number in the format 0000-0000.'];
         return;
       }
 
@@ -366,13 +456,13 @@ export default {
         const res = await fetch('http://localhost/Security2.0/api/get_security_questions.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: this.email })
+          body: JSON.stringify({ id_number: this.idNumber  })
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-          this.message = data.error || 'Unable to fetch security questions for this email.';
+          this.warnings.idNumber = [data.error || 'This ID number does not exist.'];
           return;
         }
 
@@ -394,7 +484,7 @@ export default {
         this.step = 2;
       } catch (err) {
         console.error(err);
-        this.message = 'Network error while fetching questions.';
+        this.warnings.idNumber = 'Network error while fetching questions.';
       }
     }
     ,
@@ -425,5 +515,12 @@ h3 {
 
 hr {
   width: 100%;
+}
+
+.registration-box {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 </style>

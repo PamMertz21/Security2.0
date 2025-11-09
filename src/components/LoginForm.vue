@@ -51,7 +51,7 @@
     </div>
 
     <a v-if="consecutiveError >= 2"
-      @click="!lockoutActive && goToForgotPass()"
+      @click="!lockoutActive && this.$router.push('/forgot');"
       :class="{ disabled: lockoutActive }"
     >Forgot Password</a>
   </form>
@@ -160,10 +160,6 @@ export default {
         this.warnings.general = ["Network or server error occurred."];
       }
     },
-    goToForgotPass() {
-      // notify parent to show the forgot password view
-      this.$router.push('/forgot');
-    }
   }
 }
 </script>

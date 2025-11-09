@@ -1,13 +1,34 @@
 <template>
   <h1>Change Password</h1>
 
-    <div class="warning-container" v-if="warnings.confirmPassword && warnings.confirmPassword.length">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+    <div
+      class="warning-container"
+      v-if="allWarnings.length || error || success"
+      :class="{
+        'warning-success': success,
+        'warning-error': error,
+        'warning-default': allWarnings.length && !error && !success
+      }"
+    >
+      <svg v-if="success"  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6" :class="{'warning-success': success}"
+      >
+        <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd"/>
       </svg>
+
+      <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+      </svg>
+
       <ul>
-        <li class="warning">{{ warnings.confirmPassword[0] }}</li>
+        <p v-if="warnings.idNumber && warnings.idNumber.length" class="warning">
+          {{ warnings.idNumber[0] }}
+        </p>
+        <li v-for="(msg, i) in allWarnings" :key="i" class="warning">{{ msg }}</li>
+        <li v-if="error" class="warning">{{ error }}</li>
+        <li v-if="success" class="success">{{ success }}</li>
       </ul>
+
   </div>
 
   <div v-if="newPassword" class="password-strength-container">
@@ -109,7 +130,7 @@
 <script>
 export default {
   props: {
-    email: {
+    idNumber: {
       type: String,
       required: false,
       default: ''
@@ -124,10 +145,31 @@ export default {
       error: "",
       success: "",
       passwordStrengthScore: 0,
-      warnings: {},
+      warnings: {
+        idNumber: [],
+        newPassword: [],
+        confirmPassword: [],
+      },
     };
   },
   computed: {
+    allWarnings() {
+      const vals = Object.values(this.warnings || {});
+      const flat = [];
+
+      for (const v of vals) {
+        if (Array.isArray(v)) {
+          for (const msg of v) {
+            if (msg && String(msg).trim()) flat.push(String(msg).trim());
+          }
+        } else if (v && String(v).trim()) {
+          flat.push(String(v).trim());
+        }
+      }
+
+      return flat;
+    },
+
     strengthWidth() {
       if (!this.newPassword) return '0%';
       if (this.passwordStrengthScore <= 1) return '33%';
@@ -158,7 +200,7 @@ export default {
       let messages = [];
 
       if (!value) {
-        this.warnings.newPassword = [];
+        this.warnings.newPassword = ["Password cannot be empty."];
         this.passwordStrengthScore = 0;
         return;
       }
@@ -196,35 +238,58 @@ export default {
       this.warnings.confirmPassword = messages;
     },
     async submitChange() {
-      // run validations
+      this.error = "";
+      this.success = "";
+
+      // Validate ID number format
+      if (!this.idNumber || !/^\d{4}-\d{4}$/.test(this.idNumber.trim())) {
+        this.warnings.idNumber = ["ID must be in the format 0000-0000!"];
+        console.log('ID warning triggered', this.warnings.idNumber);
+        return;
+      } else {
+        this.warnings.idNumber = [];
+      }
+
+
+      // Run validations
       this.validatePassword({ target: { value: this.newPassword } });
       this.validateConfirmPassword();
 
-      if ((this.warnings.newPassword && this.warnings.newPassword.length) || (this.warnings.confirmPassword && this.warnings.confirmPassword.length)) {
-        return { ok: false, error: 'Fix validation errors before submitting.' };
+      if (
+        (this.warnings.newPassword && this.warnings.newPassword.length) ||
+        (this.warnings.confirmPassword && this.warnings.confirmPassword.length)
+      ) {
+        this.error;
+        return;
       }
-
-      // basic email validation
-      const emailVal = (this.email || '').trim();
-      const re = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-      if (!emailVal || !re.test(emailVal)) {
-        return { ok: false, error: 'Valid email not provided.' };
-      }
-
       try {
-        const res = await fetch('/Security2.0/api/reset_password.php', {
+        const res = await fetch('http://localhost/Security2.0/api/reset_password.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: emailVal, new_password: this.newPassword })
+          body: JSON.stringify({ id_number: this.idNumber, new_password: this.newPassword }),
         });
 
         const data = await res.json();
-        if (!res.ok) return { ok: false, error: data.error || 'Server error' };
-        return { ok: true, data };
-      } catch  {
-        return { ok: false, error: 'Network error' };
+        if (!res.ok || data.error) {
+          this.error = data.error || "Failed to change password.";
+        } else {
+          this.success = "Successfully Changed Password";
+          this.newPassword = "";
+          this.confirmPassword = "";
+          setTimeout(() => {
+            this.$router.push("/login"); // Redirect after a delay of 1 second
+          }, 1000);
+        }
+      } catch {
+        this.error = "Network error, please try again.";
       }
+      console.log('Sending to backend:', {
+        id_number: this.idNumber,
+        new_password: this.newPassword
+      });
+
     }
+
   },
 };
 </script>
@@ -326,5 +391,22 @@ input[type="password"] {
   font-size: 0.85em;
   color: #4b5563;
   text-align: left;
+}
+
+.warning-container {
+  transition: background-color 0.3s ease;
+}
+
+/* Default (red warning background) */
+.warning-default,
+.warning-error {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+/* Success (green) */
+.warning-success {
+  background-color: #d1e7dd;
+  color: #0f5132;
 }
 </style>
