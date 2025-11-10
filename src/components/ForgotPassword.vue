@@ -160,6 +160,7 @@
       </div>
 
       <div class="btn-container" v-if="step === 1">
+        <button type="button" @click="$router.push('/login')" class="btn">Back</button>
         <button type="button"
           @click="() => { if (validateIdNumber()) fetchQuestions(); }"
           class="btn"
@@ -499,28 +500,4 @@ export default {
 };
 </script>
 
-<style scoped>
-form {
-  padding: 1em;
-}
-
-.header {
-  width: 100%;
-  text-align: start;
-}
-
-h3 {
-  font-weight: 600;
-}
-
-hr {
-  width: 100%;
-}
-
-.registration-box {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-</style>
+<style src="../assets/CSS/forgot_password.css" scoped></style>

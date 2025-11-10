@@ -8,22 +8,4 @@
 <script>
 </script>
 
-<style scoped>
-.home-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 1em;
-  background-color: aliceblue;
-}
-.home-container h1 {
-  font: 5.5em "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-</style>
+<style src="../assets/CSS/home.css" scoped></style>

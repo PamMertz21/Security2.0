@@ -1,6 +1,14 @@
 <template>
   <form method="POST" @submit.prevent="register">
     <h1>Sign Up</h1>
+      <!-- success message container -->
+      <div class="success-container" v-if="successMessage">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        <p>{{ successMessage }}</p>
+      </div>
+
       <!-- central warning container (shows all current field messages) -->
       <div class="warning-container" v-if="allWarnings.length">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -30,7 +38,7 @@
           <label for="lname">Last Name: <span>*</span></label>
         </div>
         <div class="form-group">
-          <input type="text" id="suffix" name="suffix" v-model="form.suffix" @input="validateSuffix">
+          <input type="text" id="suffix" name="suffix" placeholder="Jr, Sr, III, etc." v-model="form.suffix" @input="validateSuffix">
           <label for="suffix">Suffix: <span class="optional">(Optional)</span></label>
         </div>
         <div class="form-group">
@@ -108,8 +116,19 @@
           <label for="username">Username: <span>*</span></label>
         </div>
         <div class="form-group">
-          <input type="password" id="password" name="password" v-model="form.password" required @input="validatePassword">
+          <input :type="showPassword ? 'text' : 'password'" id="password" name="password" v-model="form.password" required @input="validatePassword">
           <label for="password">Password: <span>*</span></label>
+
+          <!-- Show/Hide Password Icon -->
+          <svg v-if="!showPassword" @click="showPassword = !showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 eye-icon">
+            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+            <path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clip-rule="evenodd" />
+          </svg>
+          <svg v-else @click="showPassword = !showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 eye-icon">
+            <path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z" />
+            <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z" />
+            <path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z" />
+          </svg>
 
           <!-- Password Strength Display -->
           <div v-if="form.password" class="password-strength">
@@ -118,8 +137,19 @@
           </div>
         </div>
         <div class="form-group">
-          <input type="password" id="repassword" name="repassword" v-model="form.repassword" required @input="validateConfirmPassword">
+          <input :type="showRePassword ? 'text' : 'password'" id="repassword" name="repassword" v-model="form.repassword" required @input="validateConfirmPassword">
           <label for="repassword">Re-enter Password: <span>*</span></label>
+
+          <!-- Show/Hide Password Icon -->
+          <svg v-if="!showRePassword" @click="showRePassword = !showRePassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 eye-icon">
+            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+            <path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clip-rule="evenodd" />
+          </svg>
+          <svg v-else @click="showRePassword = !showRePassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 eye-icon">
+            <path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z" />
+            <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z" />
+            <path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z" />
+          </svg>
         </div>
       </div>
       <div class="btn-container">
@@ -204,6 +234,76 @@
 
       <div class="btn-container">
         <button type="button" @click="step = 'login_details'" class="btn">Back</button>
+        <button type="button" @click="step = 'confirm'" class="btn" :disabled="!canProceedQuestions">Next</button>
+      </div>
+    </div>
+
+    <div class="form-content" v-if="step === 'confirm'">
+      <div class="header">
+        <h3>Re-enter Authentication Answers</h3>
+      </div>
+      <hr>
+      <div class="registration-box" style="display: flex; flex-direction: column; justify-content: center;">
+        <!-- Question 1 -->
+        <div class="form-group">
+          <select id="confirm_question1" v-model="form.question1" required disabled>
+            <option disabled value="">-- Select a question --</option>
+            <option
+              v-for="(q, index) in questionList"
+              :key="'cq1-' + index"
+              :value="q.choice"
+            >
+              {{ q.choice }}
+          </option>
+          </select>
+          <label for="confirm_question1" class="question-label">Question 1: <span>*</span></label>
+        </div>
+        <div class="form-group">
+          <input type="text" id="reanswer1" v-model="form.reanswer1" required @input="validateReAnswer($event, 1)">
+          <label for="reanswer1" class="question-label">Answer 1: <span>*</span></label>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="form-group">
+          <select id="confirm_question2" v-model="form.question2" required disabled>
+            <option disabled value="">-- Select a question --</option>
+            <option
+              v-for="(q, index) in questionList"
+              :key="'cq2-' + index"
+              :value="q.choice"
+            >
+              {{ q.choice }}
+            </option>
+          </select>
+          <label for="confirm_question2" class="question-label">Question 2: <span>*</span></label>
+        </div>
+        <div class="form-group">
+          <input type="text" id="reanswer2" v-model="form.reanswer2" required @input="validateReAnswer($event, 2)">
+          <label for="reanswer2" class="question-label">Answer 2: <span>*</span></label>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="form-group">
+          <select id="confirm_question3" v-model="form.question3" required disabled>
+            <option disabled value="">-- Select a question --</option>
+            <option
+              v-for="(q, index) in questionList"
+              :key="'cq3-' + index"
+              :value="q.choice"
+            >
+              {{ q.choice }}
+            </option>
+          </select>
+          <label for="confirm_question3" class="question-label">Question 3: <span>*</span></label>
+        </div>
+        <div class="form-group">
+          <input type="text" id="reanswer3" v-model="form.reanswer3" required @input="validateReAnswer($event, 3)">
+          <label for="reanswer3" class="question-label">Answer 3: <span>*</span></label>
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <button type="button" @click="step = 'questions'" class="btn">Back</button>
         <button type="submit" class="btn" :disabled="!canSubmitRegister">Register</button>
       </div>
     </div>
@@ -218,6 +318,9 @@ export default {
       ageWarning: '',
       warnings: {},
       passwordStrengthScore: 0,
+      showPassword: false,
+      showRePassword: false,
+      successMessage: '',
       form: {
         id: '',
         firstName: '',
@@ -242,7 +345,10 @@ export default {
         question2: '',
         answer2: '',
         question3: '',
-        answer3: ''
+        answer3: '',
+        reanswer1: '',
+        reanswer2: '',
+        reanswer3: ''
       },
       questionList: [
         {choice: 'What is your favorite color?', value: 'What is your favorite color?'},
@@ -309,11 +415,32 @@ export default {
     },
     canProceedQuestions() {
       const f = this.form;
-      return (
+      const filled = (
         f.question1 && f.answer1.trim() &&
         f.question2 && f.answer2.trim() &&
         f.question3 && f.answer3.trim()
       );
+      if (!filled) return false;
+      return !this.hasFieldWarnings(['answer1', 'answer2', 'answer3']);
+    },
+    canProceedConfirm() {
+      const f = this.form;
+      const filled = (
+        f.reanswer1.trim() &&
+        f.reanswer2.trim() &&
+        f.reanswer3.trim()
+      );
+      if (!filled) return false;
+
+      // Check if answers match
+      const answersMatch = (
+        f.answer1.trim() === f.reanswer1.trim() &&
+        f.answer2.trim() === f.reanswer2.trim() &&
+        f.answer3.trim() === f.reanswer3.trim()
+      );
+      if (!answersMatch) return false;
+
+      return !this.hasFieldWarnings(['reanswer1', 'reanswer2', 'reanswer3']);
     },
     canSubmitRegister() {
       // Combine all step validations
@@ -321,7 +448,8 @@ export default {
         this.canProceedPersonal &&
         this.canProceedAddress &&
         this.canProceedLogin &&
-        this.canProceedQuestions
+        this.canProceedQuestions &&
+        this.canProceedConfirm
       );
     },
     passwordStrengthClass() {
@@ -465,7 +593,7 @@ export default {
       const id = input.id;
       const value = input.value;
       let messages = [];
-      if (value.length > 4) messages.push('Input too long!');
+      if (value.length > 3) messages.push('Input too long!');
       if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word in your suffix must be capitalized!');
       if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) messages.push('Invalid suffix input');
       this.warnings[id] = messages;
@@ -595,6 +723,22 @@ export default {
       this.warnings[id] = messages;
     },
 
+    validateReAnswer(evt, questionNumber) {
+      const value = evt.target.value.trim();
+      const id = evt.target.id;
+      let messages = [];
+
+      const originalAnswer = this.form[`answer${questionNumber}`].trim();
+
+      if (!value) {
+        messages.push(`Please re-enter Answer ${questionNumber}.`);
+      } else if (value !== originalAnswer) {
+        messages.push(`Answer ${questionNumber} does not match!`);
+      }
+
+      this.warnings[id] = messages;
+    },
+
     // keep your existing validateUniqueField method as-is
     validateUniqueField(evt, type) {
       const input = evt.target;
@@ -704,8 +848,10 @@ export default {
           return;
         }
         // success
-        alert('Registration successful');
-        this.$router.push('/login');
+        this.successMessage = 'Registration successful! Redirecting to login...';
+        setTimeout(() => {
+          this.$router.push('/login');
+        }, 2000);
       } catch (err) {
         console.error(err);
         alert('Network or server error');
@@ -716,115 +862,4 @@ export default {
 
 </script>
 
-<style scoped>
-form {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1em;
-}
-
-.form-content {
-  width: 100%;
-  height: 80%;
-}
-
-.registration-box {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: .8em 1em ;
-  width: 100%;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: .2em;
-}
-
-.form-group label {
-  text-align: start;
-  margin-left: 1em;
-}
-
-.form-group input, select {
-  width: 90%;
-  align-self: center;
-  padding: .5em .5em .5em 1em;
-  border-radius: 1em;
-  border: none;
-}
-
-.header {
-  width: 100%;
-  text-align: start;
-  margin-left: 1em;
-}
-
-h3 {
-  font-weight: 600;
-}
-
-hr {
-  width: 100%;
-}
-
-.btn-container {
-  display: flex;
-  gap: 1em;
-  width: 100%;
-  justify-content: center;
-}
-
-.btn[disabled] {
-  opacity: 0.45;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.form-content > .btn {
-  align-self: center;
-  margin-top: auto;
-}
-
-a {
-  text-decoration: none;
-  color: #F1F0E4;
-}
-
-.password-strength {
-  margin-top: 0.5em;
-  width: 90%;
-  align-self: center;
-}
-
-.strength-bar {
-  height: 6px;
-  border-radius: 4px;
-  margin-bottom: 0.3em;
-  transition: background-color 0.3s, width 0.3s;
-  width: 100%;
-}
-
-.strength-bar.weak {
-  background-color: #e74c3c;
-  width: 33%;
-}
-.strength-bar.medium {
-  background-color: #f1c40f;
-  width: 66%;
-}
-.strength-bar.strong {
-  background-color: #2ecc71;
-  width: 100%;
-}
-
-.strength-text {
-  font-size: 0.85em;
-  text-align: left;
-  margin-left: 0.5em;
-  font-weight: 500;
-}
-
-</style>
+<style src="../assets/CSS/signup.css" scoped></style>
