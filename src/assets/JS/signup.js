@@ -301,16 +301,24 @@ export default {
     validateStreet(evt) {
       const input = evt.target;
       const id = input.id;
-      let messages = this.validateAddress(evt);
+      const value = input.value;
+      let messages = [];
 
       // Special validation for purok field
       if (id === 'purok' && input.value.length > 0) {
-        const purokRegex = /^(?:P-|Purok)\s*[A-Za-z0-9]+$/i;
+        const purokRegex = /^(?:P-|Purok)[\s-]*[A-Za-z0-9]+$/i;
         if (!purokRegex.test(input.value)) {
           messages.push('Invalid purok input.');
         }
-      } else if (input.value.length > 0 && !this.onlyDashAllowed(input.value)) {
-        messages.push('Invalid street input');
+        // Apply validateAddress rules except allCaps for purok
+        if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
+        if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs not allowed!');
+      } else {
+        // Use general address validation for other street fields
+        messages = this.validateAddress(evt);
+        if (input.value.length > 0 && !this.onlyDashAllowed(input.value)) {
+          messages.push('Invalid purok input');
+        }
       }
 
       this.warnings[id] = messages;
@@ -321,8 +329,9 @@ export default {
       const id = input.id;
       let messages = this.validateAddress(evt);
       if (this.numisFollowedByAlphabet(input.value)) messages.push('Invalid Input!');
-      if (this.numDashLetter(input.value)) messages.push('Invalid Input!');
-      if (/^[a-zA-Z0-9.]+$/.test(input.value) === false && input.value.length > 0) messages.push('Invalid Input!');
+      // Allow dashes in barangay names (like Caloc-an), only flag digit-dash-letter pattern
+      // if (this.numDashLetter(input.value)) messages.push('Invalid Input!!');
+      if (/^[a-zA-Z0-9\s-]+$/.test(input.value) === false && input.value.length > 0) messages.push('Invalid Input!');
       this.warnings[id] = messages;
     },
 
@@ -338,8 +347,39 @@ export default {
     validateProvince(evt) {
       const input = evt.target;
       const id = input.id;
-      let messages = this.validateAddress(evt);
-      if (this.containsNum(input.value) || this.containsSymbol(input.value)) messages.push('Invalid Input!');
+      const value = input.value;
+      let messages = [];
+
+      if (!value) {
+        this.warnings[id] = messages;
+        return;
+      }
+
+      // Apply most validateAddress rules except strict capitalization for provinces
+      if (this.allCaps(value)) messages.push('All caps not allowed!');
+      if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs not allowed!');
+
+      // Custom capitalization check for provinces
+      const words = value.trim().split(/\s+/);
+      const allowedLowercase = ['del', 'de', 'da', 'ng', 'sa', 'ni', 'kay'];
+      let hasCapitalizationError = false;
+
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        if (word.length > 0) {
+          // First word must be capitalized, others can be lowercase if they're in the allowed list
+          if (i === 0 && word[0] !== word[0].toUpperCase()) {
+            hasCapitalizationError = true;
+            break;
+          } else if (i > 0 && !allowedLowercase.includes(word.toLowerCase()) && word[0] !== word[0].toUpperCase()) {
+            hasCapitalizationError = true;
+            break;
+          }
+        }
+      }
+
+      if (hasCapitalizationError) messages.push('First letter of each word must be capitalized!');
+      if (this.containsNum(value) || this.containsSymbol(value)) messages.push('Invalid Input!');
       this.warnings[id] = messages;
     },
 
