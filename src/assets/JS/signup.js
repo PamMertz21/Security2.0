@@ -33,10 +33,7 @@ export default {
         question2: '',
         answer2: '',
         question3: '',
-        answer3: '',
-        reanswer1: '',
-        reanswer2: '',
-        reanswer3: ''
+        answer3: ''
       },
       questionList: [
         {choice: 'What is your favorite color?', value: 'What is your favorite color?'},
@@ -48,6 +45,13 @@ export default {
     }
   },
   computed: {
+    steps() {
+      return [
+        { id: 'personal', label: 'Personal Details' },
+        { id: 'login_details', label: 'Address & Login' },
+        { id: 'questions', label: 'Questions' }
+      ];
+    },
     allWarnings() {
       // flatten arrays and return non-empty trimmed messages
       const vals = Object.values(this.warnings || {});
@@ -101,6 +105,12 @@ export default {
       // Check if there are any warnings for these fields
       return !this.hasFieldWarnings(['user_id', 'username', 'password', 'repassword']);
     },
+    canProceedLoginDetails() {
+      // Combine address and login validations
+      const addressValid = this.canProceedAddress;
+      const loginValid = this.canProceedLogin;
+      return addressValid && loginValid;
+    },
     canProceedQuestions() {
       const f = this.form;
       const filled = (
@@ -111,33 +121,12 @@ export default {
       if (!filled) return false;
       return !this.hasFieldWarnings(['answer1', 'answer2', 'answer3']);
     },
-    canProceedConfirm() {
-      const f = this.form;
-      const filled = (
-        f.reanswer1.trim() &&
-        f.reanswer2.trim() &&
-        f.reanswer3.trim()
-      );
-      if (!filled) return false;
-
-      // Check if answers match
-      const answersMatch = (
-        f.answer1.trim() === f.reanswer1.trim() &&
-        f.answer2.trim() === f.reanswer2.trim() &&
-        f.answer3.trim() === f.reanswer3.trim()
-      );
-      if (!answersMatch) return false;
-
-      return !this.hasFieldWarnings(['reanswer1', 'reanswer2', 'reanswer3']);
-    },
     canSubmitRegister() {
       // Combine all step validations
       return (
         this.canProceedPersonal &&
-        this.canProceedAddress &&
-        this.canProceedLogin &&
-        this.canProceedQuestions &&
-        this.canProceedConfirm
+        this.canProceedLoginDetails &&
+        this.canProceedQuestions
       );
     },
     passwordStrengthClass() {
@@ -154,6 +143,12 @@ export default {
   },
 
   methods: {
+    isStepCompleted(stepId) {
+      const stepOrder = ['personal', 'login_details', 'questions'];
+      const currentIndex = stepOrder.indexOf(this.step);
+      const stepIndex = stepOrder.indexOf(stepId);
+      return stepIndex < currentIndex;
+    },
     // returns true if any of the provided field ids have warnings
     hasFieldWarnings(fieldIds) {
       for (const id of fieldIds) {
@@ -185,6 +180,9 @@ export default {
     },
     hasThreeConsecutiveSpaces(value) {
       return /\s{3,}/.test(value);
+    },
+    hasDoubleSpaces(value) {
+      return /\s{2}/.test(value);
     },
     hasThreeSameConsecutiveLetters(value) {
       return /([a-zA-Z])\1\1/.test(value);
@@ -219,7 +217,7 @@ export default {
       if (isNaN(age) || age < 0) messages.push('Invalid age input');
       this.warnings['birthdate'] = messages;
       const ageMsgs = [];
-      if (isNaN(age) || age < 0) ageMsgs.push('Age is invalid');
+      if (isNaN(age) || age < 0) ageMsgs.push('Birthday must not be in the future');
       else if (age < 18) ageMsgs.push('Age is below 18 years old');
       this.warnings['age'] = ageMsgs;
     },
@@ -260,6 +258,7 @@ export default {
       if (this.containsNum(value) || this.containsSymbol(value)) messages.push('Invalid name input');
       if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word in your name must be capitalized');
       if (this.hasThreeSameConsecutiveLetters(value)) messages.push('Three consecutive same letters are not allowed!');
+      if (this.hasDoubleSpaces(value)) messages.push('Double spaces are not allowed!');
       if (this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive spaces are not allowed!');
       this.warnings[id] = messages;
     },
@@ -294,6 +293,7 @@ export default {
       if (!value) return messages;
       if (this.allCaps(value)) messages.push('All caps not allowed!');
       if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
+      if (this.hasDoubleSpaces(value)) messages.push('Double spaces are not allowed!');
       if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs not allowed!');
       return messages; // Ensure this returns an array
     },
@@ -306,12 +306,19 @@ export default {
 
       // Special validation for purok field
       if (id === 'purok' && input.value.length > 0) {
-        const purokRegex = /^(?:P-|Purok)[\s-]*[A-Za-z0-9]+$/i;
-        if (!purokRegex.test(input.value)) {
-          messages.push('Invalid purok input.');
+        // Accept formats like: "P-1", "Purok 2", "P 3A", or plain numbers "12"/"12A"
+        const allowedChars = /^[A-Za-z0-9\s\-.]+$/;
+        const patterns = [
+          /^(?:P(?:urok)?)[\s\-.]*\d{1,3}[A-Za-z]?$/i, // P, Purok prefix
+          /^\d{1,3}[A-Za-z]?$/ // plain number or number+suffix
+        ];
+        if (!allowedChars.test(value)) {
+          messages.push('Invalid characters in purok. Only letters, numbers, spaces, dashes and dots are allowed.');
+        } else if (!patterns.some(p => p.test(value))) {
+          messages.push('Purok must be like "P-1", "Purok 2", or a plain number (e.g. "5" or "12A").');
         }
-        // Apply validateAddress rules except allCaps for purok
-        if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
+        // Generic checks (skip strict capitalization for purok)
+        if (this.hasDoubleSpaces(value)) messages.push('Double spaces are not allowed!');
         if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs not allowed!');
       } else {
         // Use general address validation for other street fields
@@ -357,6 +364,7 @@ export default {
 
       // Apply most validateAddress rules except strict capitalization for provinces
       if (this.allCaps(value)) messages.push('All caps not allowed!');
+      if (this.hasDoubleSpaces(value)) messages.push('Double spaces are not allowed!');
       if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs not allowed!');
 
       // Custom capitalization check for provinces
@@ -457,23 +465,8 @@ export default {
       let messages = [];
       if (!value) messages.push('Answer cannot be empty.');
       if (value.length < 2) messages.push('Answer too short.');
+      if (this.hasDoubleSpaces(evt.target.value)) messages.push('Double spaces are not allowed!');
       if (this.containsSymbol(value)) messages.push('Avoid using special symbols.');
-      this.warnings[id] = messages;
-    },
-
-    validateReAnswer(evt, questionNumber) {
-      const value = evt.target.value.trim();
-      const id = evt.target.id;
-      let messages = [];
-
-      const originalAnswer = this.form[`answer${questionNumber}`].trim();
-
-      if (!value) {
-        messages.push(`Please re-enter Answer ${questionNumber}.`);
-      } else if (value !== originalAnswer) {
-        messages.push(`Answer ${questionNumber} does not match!`);
-      }
-
       this.warnings[id] = messages;
     },
 
@@ -496,10 +489,10 @@ export default {
         if (!emailRegex.test(value)) messages.push('Invalid email format');
       }
       if (type === 'username') {
-        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        const usernameRegex = /^[a-z]+_[a-z]+$/;
         if (value.length < 5) messages.push('Username must be at least 5 characters long');
         if (value.length > 20) messages.push('Username cannot exceed 20 characters');
-        if (!usernameRegex.test(value)) messages.push('Username can only contain letters, numbers, and underscores');
+        if (!usernameRegex.test(value)) messages.push('Username must be "a-z_a-z" format');
       }
 
       // DATABASE CHECK

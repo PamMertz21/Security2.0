@@ -51,12 +51,27 @@
     </div>
 
     <a v-if="consecutiveError >= 2"
-      @click="!lockoutActive && this.$router.push('/forgot');"
+      @click="!lockoutActive && handleForgotPassword()"
       :class="{ disabled: lockoutActive }"
     >Forgot Password</a>
   </form>
 </template>
 
-<script src="../assets/JS/login.js"></script>
+<script>
+import { setCanAccessForgotPassword } from '../router.js';
+import loginLogic from '../assets/JS/login.js';
+
+export default {
+  ...loginLogic,
+  methods: {
+    ...loginLogic.methods,
+    handleForgotPassword() {
+      setCanAccessForgotPassword(true);
+      this.$router.push('/forgot');
+    }
+  },
+  emits: ['lockout-changed']
+}
+</script>
 
 <style src="../assets/CSS/login.css"></style>

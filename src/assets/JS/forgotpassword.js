@@ -13,18 +13,12 @@ export default {
       userId: null,
       questionsLoaded: false,
       step: 1,
-      warningMessage: '',
       form: {
         question1: '',
         answer1: '',
         question2: '',
         answer2: '',
         question3: '',
-        answer3: ''
-      },
-      originalAnswers: {
-        answer1: '',
-        answer2: '',
         answer3: ''
       },
       questionList: [
@@ -64,17 +58,6 @@ export default {
         f.question1 && f.answer1.trim() &&
         f.question2 && f.answer2.trim() &&
         f.question3 && f.answer3.trim()
-      );
-    },
-
-    // Step 3 to Step 4: validations if answers have been modified
-    isStep3Valid() {
-      const f = this.form;
-      const o = this.originalAnswers;
-      return (
-        f.answer1.trim() === o.answer1.trim() &&
-        f.answer2.trim() === o.answer2.trim() &&
-        f.answer3.trim() === o.answer3.trim()
       );
     }
   },
@@ -136,13 +119,6 @@ export default {
           return; // stop — do not proceed
         }
 
-        // Save original answers only if they match the DB
-        this.originalAnswers = {
-          answer1: this.form.answer1.trim(),
-          answer2: this.form.answer2.trim(),
-          answer3: this.form.answer3.trim()
-        };
-
         this.form.answer1 = '';
         this.form.answer2 = '';
         this.form.answer3 = '';
@@ -157,24 +133,6 @@ export default {
           this.isStep2Loading = false;
         }
       }
-    },
-
-    // ✅ Step 3 → Step 4: Show warning if answers don't match
-    goToStep4() {
-      const f = this.form;
-      const o = this.originalAnswers;
-
-      if (
-        f.answer1.trim() !== o.answer1.trim() ||
-        f.answer2.trim() !== o.answer2.trim() ||
-        f.answer3.trim() !== o.answer3.trim()
-      ) {
-        this.warningMessage = 'Your re-entered answers do not match the previous ones.';
-        return; // stop here, don't move forward
-      }
-
-      this.warningMessage = ''; // clear any old warning
-      this.step = 4; // move to change password
     },
     async handleChangePassword() {
       // Validate ID number format before proceeding

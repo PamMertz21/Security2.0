@@ -1,3 +1,5 @@
+import { setUserAuthenticated } from '../../router.js';
+
 export default {
   props: {
     idNumber: {
@@ -146,6 +148,7 @@ export default {
           this.success = "Successfully Changed Password";
           this.newPassword = "";
           this.confirmPassword = "";
+          setUserAuthenticated(false);
           setTimeout(() => {
             this.$router.push("/login"); // Redirect after a delay of 1 second
           }, 1000);

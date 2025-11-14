@@ -1,3 +1,5 @@
+import { setUserAuthenticated } from '../../router.js';
+
 export default {
   data(){
     return {
@@ -10,6 +12,20 @@ export default {
       lockoutTimeRemaining: 0,
       lockoutTimer: null,
       showPassword: false,
+    }
+  },
+  provide() {
+    return {
+      getLockoutState: () => ({
+        lockoutActive: this.lockoutActive,
+        lockoutTimeRemaining: this.lockoutTimeRemaining
+      })
+    }
+  },
+  watch: {
+    lockoutActive(newVal) {
+      // Emit event to parent when lockout state changes
+      this.$emit('lockout-changed', newVal);
     }
   },
   computed: {
@@ -29,19 +45,66 @@ export default {
       return flat;
     }
   },
+  mounted() {
+    // Restore lockout state if page was reloaded during lockout
+    this.restoreLockoutState();
+  },
   methods: {
     togglePassword() {
       this.showPassword = !this.showPassword;
     },
+    restoreLockoutState() {
+      // Check if lockout was active before reload
+      const lockoutEndTime = sessionStorage.getItem('lockoutEndTime');
+      if (lockoutEndTime) {
+        const now = Date.now();
+        const endTime = parseInt(lockoutEndTime, 10);
+        const remaining = Math.ceil((endTime - now) / 1000);
+
+        if (remaining > 0) {
+          // Lockout is still active - restore it
+          this.lockoutActive = true;
+          this.lockoutTimeRemaining = remaining;
+
+          // Restart the timer
+          if (this.lockoutTimer) {
+            clearInterval(this.lockoutTimer);
+          }
+
+          this.lockoutTimer = setInterval(() => {
+            this.lockoutTimeRemaining--;
+            if (this.lockoutTimeRemaining <= 0) {
+              clearInterval(this.lockoutTimer);
+              this.lockoutActive = false;
+              sessionStorage.removeItem('lockoutEndTime');
+            }
+          }, 1000);
+        } else {
+          // Lockout has expired
+          sessionStorage.removeItem('lockoutEndTime');
+          this.lockoutActive = false;
+        }
+      }
+    },
     startLockout(seconds) {
       this.lockoutActive = true;
       this.lockoutTimeRemaining = seconds;
+
+      // Store lockout end time in sessionStorage so it persists across reloads
+      const endTime = Date.now() + (seconds * 1000);
+      sessionStorage.setItem('lockoutEndTime', endTime.toString());
+
+      // Clear any existing timer
+      if (this.lockoutTimer) {
+        clearInterval(this.lockoutTimer);
+      }
 
       this.lockoutTimer = setInterval(() => {
         this.lockoutTimeRemaining--;
         if (this.lockoutTimeRemaining <= 0) {
           clearInterval(this.lockoutTimer);
           this.lockoutActive = false;
+          sessionStorage.removeItem('lockoutEndTime');
         }
       }, 1000);
     },
@@ -91,6 +154,7 @@ export default {
 
         // success
         localStorage.setItem("user", JSON.stringify(data.user));
+        setUserAuthenticated(true);
         this.$router.push('/dashboard');
         this.consecutiveError = 0;
 

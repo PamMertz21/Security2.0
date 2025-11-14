@@ -1,4 +1,3 @@
-
 import { createRouter, createWebHistory } from 'vue-router';
 
 import Home from './components/HomePage.vue';
@@ -19,6 +18,54 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
+});
+
+// Store lockout state globally for router access
+let globalLockoutActive = false;
+// Track if user is authenticated (has active session)
+let isUserAuthenticated = false;
+// Track if user accessed forgot password intentionally
+let canAccessForgotPassword = false;
+
+// Export functions to update auth state
+export function setLockoutState(isActive) {
+  globalLockoutActive = isActive;
+}
+
+export function setUserAuthenticated(authenticated) {
+  isUserAuthenticated = authenticated;
+}
+
+export function setCanAccessForgotPassword(canAccess) {
+  canAccessForgotPassword = canAccess;
+}
+
+// Route guard for login, dashboard, and forgot password
+router.beforeEach((to, from, next) => {
+  // If lockout is active and user tries to navigate away from login page, prevent it
+  if (globalLockoutActive && from.name === 'login' && to.name !== 'login') {
+    next(false); // Cancel navigation
+    return;
+  }
+
+  // Protect /dashboard - only accessible if authenticated
+  if (to.name === 'dashboard' && !isUserAuthenticated) {
+    next({ name: 'login' });
+    return;
+  }
+
+  // Protect /forgot - only accessible if explicitly allowed (clicked "Forgot Password" button)
+  if (to.name === 'forgot' && !canAccessForgotPassword) {
+    next({ name: 'login' });
+    return;
+  }
+
+  // Reset forgot password access flag when leaving /forgot
+  if (from.name === 'forgot' && to.name !== 'forgot') {
+    canAccessForgotPassword = false;
+  }
+
+  next();
 });
 
 // disable back button only when user is on login

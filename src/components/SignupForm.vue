@@ -1,6 +1,23 @@
 <template>
   <form method="POST" @submit.prevent="register">
     <h1>Sign Up</h1>
+
+    <div class="steps">
+      <div class="step-indicator">
+        <div
+          v-for="(stepInfo, index) in steps"
+          :key="stepInfo.id"
+          class="step-item"
+          :class="{
+            'active': step === stepInfo.id,
+            'completed': isStepCompleted(stepInfo.id)
+          }"
+        >
+          <div class="step-number">{{ index + 1 }}</div>
+          <div class="step-label">{{ stepInfo.label }}</div>
+        </div>
+      </div>
+    </div>
       <!-- success message container -->
       <div class="success-container" v-if="successMessage">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -61,15 +78,16 @@
           <label for="email">Email: <span>*</span></label>
         </div>
       </div>
-      <button type="button" @click="step = 'address'" class="btn" :disabled="!canProceedPersonal">Next</button>
+      <button type="button" @click="step = 'login_details'" class="btn" :disabled="!canProceedPersonal">Next</button>
     </div>
 
-    <div class="form-content" v-if="step === 'address'">
+    <div class="form-content" v-if="step === 'login_details'">
       <div class="header">
-        <h3>Address</h3>
+        <h3>Address & Login Details</h3>
       </div>
       <hr>
       <div class="registration-box">
+        <!-- Address Fields -->
         <div class="form-group">
           <input type="text" id="purok" name="purok" v-model="form.purok" required @input="validateStreet">
           <label for="purok">Purok: <span>*</span></label>
@@ -94,19 +112,7 @@
           <input type="number" id="zip" name="zip" v-model="form.zip" required @input="validateZipcode">
           <label for="zip">Zip Code: <span>*</span></label>
         </div>
-      </div>
-      <div class="btn-container">
-        <button type="button" @click="step = 'personal'" class="btn">Back</button>
-        <button type="button" @click="step = 'login_details'" class="btn" :disabled="!canProceedAddress">Next</button>
-      </div>
-    </div>
-
-    <div class="form-content" v-if="step === 'login_details'">
-      <div class="header">
-        <h3>Login Details</h3>
-      </div>
-      <hr>
-      <div class="registration-box">
+        <!-- Login Details Fields -->
         <div class="form-group">
           <input type="text" id="user_id" name="user_id" v-model="form.id" required @input="checkID">
           <label for="id">ID No. <span>*</span></label>
@@ -153,8 +159,8 @@
         </div>
       </div>
       <div class="btn-container">
-        <button type="button" @click="step = 'address'" class="btn">Back</button>
-        <button type="button" @click="step = 'questions'" class="btn" :disabled="!canProceedLogin">Next</button>
+        <button type="button" @click="step = 'personal'" class="btn">Back</button>
+        <button type="button" @click="step = 'questions'" class="btn" :disabled="!canProceedLoginDetails">Next</button>
       </div>
     </div>
 
@@ -234,76 +240,6 @@
 
       <div class="btn-container">
         <button type="button" @click="step = 'login_details'" class="btn">Back</button>
-        <button type="button" @click="step = 'confirm'" class="btn" :disabled="!canProceedQuestions">Next</button>
-      </div>
-    </div>
-
-    <div class="form-content" v-if="step === 'confirm'">
-      <div class="header">
-        <h3>Re-enter Authentication Answers</h3>
-      </div>
-      <hr>
-      <div class="registration-box" style="display: flex; flex-direction: column; justify-content: center;">
-        <!-- Question 1 -->
-        <div class="form-group">
-          <select id="confirm_question1" v-model="form.question1" required disabled>
-            <option disabled value="">-- Select a question --</option>
-            <option
-              v-for="(q, index) in questionList"
-              :key="'cq1-' + index"
-              :value="q.choice"
-            >
-              {{ q.choice }}
-          </option>
-          </select>
-          <label for="confirm_question1" class="question-label">Question 1: <span>*</span></label>
-        </div>
-        <div class="form-group">
-          <input type="text" id="reanswer1" v-model="form.reanswer1" required @input="validateReAnswer($event, 1)">
-          <label for="reanswer1" class="question-label">Answer 1: <span>*</span></label>
-        </div>
-
-        <!-- Question 2 -->
-        <div class="form-group">
-          <select id="confirm_question2" v-model="form.question2" required disabled>
-            <option disabled value="">-- Select a question --</option>
-            <option
-              v-for="(q, index) in questionList"
-              :key="'cq2-' + index"
-              :value="q.choice"
-            >
-              {{ q.choice }}
-            </option>
-          </select>
-          <label for="confirm_question2" class="question-label">Question 2: <span>*</span></label>
-        </div>
-        <div class="form-group">
-          <input type="text" id="reanswer2" v-model="form.reanswer2" required @input="validateReAnswer($event, 2)">
-          <label for="reanswer2" class="question-label">Answer 2: <span>*</span></label>
-        </div>
-
-        <!-- Question 3 -->
-        <div class="form-group">
-          <select id="confirm_question3" v-model="form.question3" required disabled>
-            <option disabled value="">-- Select a question --</option>
-            <option
-              v-for="(q, index) in questionList"
-              :key="'cq3-' + index"
-              :value="q.choice"
-            >
-              {{ q.choice }}
-            </option>
-          </select>
-          <label for="confirm_question3" class="question-label">Question 3: <span>*</span></label>
-        </div>
-        <div class="form-group">
-          <input type="text" id="reanswer3" v-model="form.reanswer3" required @input="validateReAnswer($event, 3)">
-          <label for="reanswer3" class="question-label">Answer 3: <span>*</span></label>
-        </div>
-      </div>
-
-      <div class="btn-container">
-        <button type="button" @click="step = 'questions'" class="btn">Back</button>
         <button type="submit" class="btn" :disabled="!canSubmitRegister">Register</button>
       </div>
     </div>

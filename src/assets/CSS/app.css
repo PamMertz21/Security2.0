@@ -36,11 +36,9 @@ header .header-btn {
   gap: 2em;
 }
 
-header .header-btn button {
+header .header-btn p {
   padding: .6em .8em;
   border: none;
-  border-radius: 1em;
-  box-shadow: 1px 1px 1px #00000087;
   text-transform: uppercase;
   display: flex;
   justify-content: center;
@@ -48,9 +46,23 @@ header .header-btn button {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  color: #fefefe;
+}
+
+header .header-btn p:disabled,
+header .header-btn p.disabled-btn {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+header .header-btn .disabled-link {
+  pointer-events: none;
+  cursor: not-allowed;
 }
 .dark-btn {
-  background-color: var(--color-secondary);
   color: #fff;
 }
 
