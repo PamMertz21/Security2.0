@@ -55,18 +55,24 @@ try {
     exit;
   }
 
-  // ✅ Compare answers (case-insensitive)
+  // ✅ Compare answers (case-insensitive) and track which ones are wrong
   $allCorrect = true;
+  $incorrectAnswers = [];
+  
   for ($i = 0; $i < 3; $i++) {
     if (!password_verify($answers[$i], $securityData[$i]['answer_hash'])) {
       $allCorrect = false;
-      break;
+      $incorrectAnswers[] = $i + 1; // Store 1-based index (answer1, answer2, answer3)
     }
   }
 
   if (!$allCorrect) {
     http_response_code(401);
-    echo json_encode(['match' => false, 'error' => 'Incorrect answers']);
+    echo json_encode([
+      'match' => false, 
+      'error' => 'Incorrect answers',
+      'incorrect_answers' => $incorrectAnswers
+    ]);
     exit;
   }
 

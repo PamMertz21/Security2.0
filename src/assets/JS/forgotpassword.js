@@ -7,7 +7,9 @@ export default {
   data() {
     return {
       isStep2Loading: false,
-      warnings: {},
+      warnings: {
+        server: []
+      },
       idNumber: '',
       message: '',
       userId: null,
@@ -60,7 +62,21 @@ export default {
         f.question2 && f.answer2.trim() &&
         f.question3 && f.answer3.trim()
       );
-    }
+    },
+    isChangePasswordValid() {
+      // Check if the ChangePassword component has validation errors
+      if (!this.$refs.changePasswordComponent) return false;
+
+      const component = this.$refs.changePasswordComponent;
+      const hasPasswordWarnings =
+        (component.warnings.newPassword && component.warnings.newPassword.length > 0) ||
+        (component.warnings.confirmPassword && component.warnings.confirmPassword.length > 0);
+
+      const hasError = Boolean(component.error);
+      const emptyFields = !component.newPassword || !component.confirmPassword;
+
+      return !hasPasswordWarnings && !hasError && !emptyFields;
+    },
   },
 
   methods: {
@@ -74,7 +90,7 @@ export default {
       const messages = [];
 
       if (!value) {
-        messages.push('ID number cannot be empty.');
+        messages.push('ID number is required.');
       } else if (!/^\d{4}-\d{4}$/.test(value)) {
         messages.push('ID must be in the format 0000-0000!');
       }
@@ -83,18 +99,67 @@ export default {
       return messages.length === 0;
     },
 
+    validateRequiredFields() {
+      let isValid = true;
+
+      // Validate ID number in step 1
+      if (this.step === 1) {
+        if (!this.idNumber.trim()) {
+          this.warnings.idNumber = ['ID number is required.'];
+          isValid = false;
+        }
+      }
+
+      // Validate answers in step 2
+      if (this.step === 2) {
+        if (!this.form.answer1.trim()) {
+          this.warnings.answer1 = ['Answer 1 is required.'];
+          isValid = false;
+        }
+        if (!this.form.answer2.trim()) {
+          this.warnings.answer2 = ['Answer 2 is required.'];
+          isValid = false;
+        }
+        if (!this.form.answer3.trim()) {
+          this.warnings.answer3 = ['Answer 3 is required.'];
+          isValid = false;
+        }
+      }
+
+      return isValid;
+    },
+
     validateAnswer(evt) {
       const value = evt.target.value.trim();
       const id = evt.target.id;
       let messages = [];
-      if (!value) messages.push('Answer cannot be empty.');
-      if (value.length < 2 && value.length != 1) messages.push('Answer too short.');
-      if (this.containsSymbol(value)) messages.push('Avoid using special symbols.');
+      if (!value) {
+        messages.push('This answer is required.');
+      } else if (value.length < 2) {
+        messages.push('Answer too short.');
+      }
+      if (value && this.containsSymbol(value)) {
+        messages.push('Avoid using special symbols.');
+      }
       this.warnings[id] = messages;
+
+      // Clear server errors and specific field errors when user starts typing again
+      if (this.warnings.server && this.warnings.server.length) {
+        this.warnings.server = [];
+      }
+
+      // Clear the specific field error for the field being typed in
+      // This allows field-specific database mismatch errors to be cleared when user retypes
+
       this.isStep2Loading = false;
     },
 
     async goToStep3() {
+      // Validate required fields first
+      if (!this.validateRequiredFields()) {
+        return; // Stop if required fields are missing
+      }
+
       this.isStep2Loading = true;
       this.warnings.server = [];
 
@@ -113,10 +178,25 @@ export default {
         const data = await res.json();
 
         if (!res.ok || !data.match) {
-          this.warnings.server = ['Your answers do not match our records.'];
+          // Clear any existing field errors first
+          this.warnings.answer1 = [];
+          this.warnings.answer2 = [];
+          this.warnings.answer3 = [];
+          this.warnings.server = [];
+
+          // If we have specific incorrect answer information, show field-specific errors
+          if (data.incorrect_answers && Array.isArray(data.incorrect_answers)) {
+            data.incorrect_answers.forEach(answerNum => {
+              const fieldName = `answer${answerNum}`;
+              this.warnings[fieldName] = ['This answer does not match our records.'];
+            });
+          } else {
+            // Fallback to generic server error if no specific info available
+            this.warnings.server = ['Your answers do not match our records.'];
+          }
 
           // Disable the Next button because of error
-           this.isStep2Loading = true;
+          this.isStep2Loading = true;
           return; // stop — do not proceed
         }
 
@@ -124,12 +204,16 @@ export default {
         this.form.answer2 = '';
         this.form.answer3 = '';
         this.warnings.server = [];
+        this.warnings.answer1 = [];
+        this.warnings.answer2 = [];
+        this.warnings.answer3 = [];
         this.step = 3;
       } catch (err) {
         console.error(err);
         this.warnings.server = ['Network or server error occurred.'];
       } finally {
-        // Re-enable only if there's no warning
+        // Re-enable only if there's no server warning
+        // Field-specific warnings don't disable the button permanently
         if (!this.warnings.server.length) {
           this.isStep2Loading = false;
         }

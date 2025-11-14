@@ -222,8 +222,9 @@ a {
   background-color: white;
   cursor: pointer;
   position: absolute;
-  right: 1.5em;
-  bottom: 0.4em;
+  right: .8em;
+  top: -.5em;
+  bottom: 0em;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -304,5 +305,31 @@ a {
 .questions-layout .form-group {
   display: flex;
   flex-direction: column-reverse;
+}
+
+/* Password field with eye icon that moves with input */
+.input-container {
+  position: relative;
+  margin-left: .8em;
+}
+
+.input-container .eye-icon {
+  position: absolute;
+  right: 1.8em;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.2em;
+  height: 1.2em;
+  color: #3d3d3d;
+  background-color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.input-container .eye-icon:hover {
+  color: #576b58;
 }
 

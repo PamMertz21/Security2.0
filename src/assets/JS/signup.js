@@ -128,6 +128,89 @@ export default {
   },
 
   methods: {
+    validateRequiredFields() {
+      let isValid = true;
+
+      if (this.step === 'personal') {
+        if (!this.form.firstName.trim()) {
+          this.warnings.fname = ['First name is required.'];
+          isValid = false;
+        }
+        if (!this.form.lastName.trim()) {
+          this.warnings.lname = ['Last name is required.'];
+          isValid = false;
+        }
+        if (!this.form.birthdate) {
+          this.warnings.birthdate = ['Birthdate is required.'];
+          isValid = false;
+        }
+        if (!this.form.email.trim()) {
+          this.warnings.email = ['Email is required.'];
+          isValid = false;
+        }
+      }
+
+      if (this.step === 'login_details') {
+        if (!this.form.purok.trim()) {
+          this.warnings.purok = ['Purok is required.'];
+          isValid = false;
+        }
+        if (!this.form.barangay.trim()) {
+          this.warnings.barangay = ['Barangay is required.'];
+          isValid = false;
+        }
+        if (!this.form.city.trim()) {
+          this.warnings.city = ['City is required.'];
+          isValid = false;
+        }
+        if (!this.form.province.trim()) {
+          this.warnings.province = ['Province is required.'];
+          isValid = false;
+        }
+        if (!this.form.country.trim()) {
+          this.warnings.country = ['Country is required.'];
+          isValid = false;
+        }
+        if (!this.form.zip.toString().trim()) {
+          this.warnings.zip = ['Zip code is required.'];
+          isValid = false;
+        }
+        if (!this.form.id.trim()) {
+          this.warnings.user_id = ['ID number is required.'];
+          isValid = false;
+        }
+        if (!this.form.username.trim()) {
+          this.warnings.username = ['Username is required.'];
+          isValid = false;
+        }
+        if (!this.form.password.trim()) {
+          this.warnings.password = ['Password is required.'];
+          isValid = false;
+        }
+        if (!this.form.repassword.trim()) {
+          this.warnings.repassword = ['Re-enter password is required.'];
+          isValid = false;
+        }
+      }
+
+      if (this.step === 'questions') {
+        if (!this.form.answer1.trim()) {
+          this.warnings.answer1 = ['Answer 1 is required.'];
+          isValid = false;
+        }
+        if (!this.form.answer2.trim()) {
+          this.warnings.answer2 = ['Answer 2 is required.'];
+          isValid = false;
+        }
+        if (!this.form.answer3.trim()) {
+          this.warnings.answer3 = ['Answer 3 is required.'];
+          isValid = false;
+        }
+      }
+
+      return isValid;
+    },
+
     isStepCompleted(stepId) {
       const stepOrder = ['personal', 'login_details', 'questions'];
       const currentIndex = stepOrder.indexOf(this.step);
@@ -604,13 +687,14 @@ export default {
     },
 
     async register() {
-      // Basic client-side validation
-      if (!this.form.username || !this.form.email || !this.form.password) {
-        alert('Please fill username, email and password');
+      // Validate all required fields
+      if (!this.validateRequiredFields()) {
         return;
       }
+
+      // Check password match
       if (this.form.password !== this.form.repassword) {
-        alert('Passwords do not match');
+        this.warnings.repassword = ['Passwords do not match.'];
         return;
       }
 

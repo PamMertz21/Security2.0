@@ -116,13 +116,32 @@ export default {
         this.startLockout(lockoutTime);
       }
 },
+    clearFieldError(fieldName) {
+      if (this.warnings[fieldName]) {
+        this.warnings[fieldName] = [];
+      }
+    },
+    validateRequiredFields() {
+      let isValid = true;
+
+      if (!this.username.trim()) {
+        this.warnings.username = ['Username is required.'];
+        isValid = false;
+      }
+
+      if (!this.password.trim()) {
+        this.warnings.password = ['Password is required.'];
+        isValid = false;
+      }
+
+      return isValid;
+    },
+
     async login() {
       this.warnings = {};
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
 
-      if (!username || !password) {
-        this.warnings.general = ["Please enter both username and password."];
+      // Validate required fields first
+      if (!this.validateRequiredFields()) {
         return;
       }
 

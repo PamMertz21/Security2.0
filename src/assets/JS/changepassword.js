@@ -26,7 +26,12 @@ export default {
   },
   computed: {
     allWarnings() {
-      const vals = Object.values(this.warnings || {});
+      // Exclude password validation errors since they're now displayed as field-specific errors
+      const warningsToShow = { ...this.warnings };
+      delete warningsToShow.newPassword;
+      delete warningsToShow.confirmPassword;
+
+      const vals = Object.values(warningsToShow || {});
       const flat = [];
 
       for (const v of vals) {
