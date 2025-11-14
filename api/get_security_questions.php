@@ -14,8 +14,8 @@ if (!$input || empty($input['id_number'])) {
 $id_number = trim($input['id_number']);
 
 try {
-  // Verify the user exists by ID
-  $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ?');
+  // Verify the user exists by ID and get username
+  $stmt = $pdo->prepare('SELECT id, username FROM users WHERE id = ?');
   $stmt->execute([$id_number]);
   $user = $stmt->fetch();
 
@@ -26,8 +26,9 @@ try {
   }
 
   $userId = $user['id'];
+  $username = $user['username'];
 
-  // Fetch the user’s security questions (without answers)
+  // Fetch the user's security questions (without answers)
   $stmt = $pdo->prepare('SELECT question FROM user_security_questions WHERE user_id = ? ORDER BY id LIMIT 3');
   $stmt->execute([$userId]);
   $questions = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -41,6 +42,7 @@ try {
   echo json_encode([
     'ok' => true,
     'user_id' => $userId,
+    'username' => $username,
     'questions' => $questions
   ]);
 

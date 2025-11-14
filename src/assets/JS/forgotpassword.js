@@ -11,6 +11,7 @@ export default {
       idNumber: '',
       message: '',
       userId: null,
+      username: '',
       questionsLoaded: false,
       step: 1,
       form: {
@@ -226,6 +227,7 @@ export default {
         // Populate questionList with returned questions
         this.questionList = data.questions.map(q => ({ choice: q, value: q }));
         this.userId = data.user_id || null;
+        this.username = data.username || '';
 
         // Auto-select the three questions for the form so user doesn't need to pick
         this.form.question1 = data.questions[0] || '';
@@ -244,6 +246,8 @@ export default {
       this.form.question1 = '';
       this.form.question2 = '';
       this.form.question3 = '';
+      this.username = '';
+      this.userId = null;
       this.step = 1;
     }
   }

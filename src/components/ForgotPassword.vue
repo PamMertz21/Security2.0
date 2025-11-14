@@ -26,6 +26,10 @@
 
       <div class="form-content" v-if="step === 2">
         <h1>Forgot Password</h1>
+        <div class="account-info" v-if="username && userId">
+          <p><strong>Username:</strong> {{ username }}</p>
+          <p><strong>ID:</strong> {{ userId }}</p>
+        </div>
         <div class="header">
           <h3>Authentication Questions</h3>
         </div>
