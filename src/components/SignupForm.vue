@@ -211,7 +211,7 @@
         <h3>Authentication Questions</h3>
       </div>
       <hr>
-      <div class="registration-box" style="display: flex; flex-direction: column; justify-content: center;">
+      <div class="registration-box questions-layout">
         <div class="form-group">
           <div class="form-group">
             <input type="text" id="answer1" v-model="form.answer1" required @input="validateAnswer">
