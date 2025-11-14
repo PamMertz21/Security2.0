@@ -52,21 +52,6 @@ export default {
         { id: 'questions', label: 'Questions' }
       ];
     },
-    allWarnings() {
-      // flatten arrays and return non-empty trimmed messages
-      const vals = Object.values(this.warnings || {});
-      const flat = [];
-      for (const v of vals) {
-        if (Array.isArray(v)) {
-          for (const m of v) {
-            if (m && String(m).trim()) flat.push(String(m).trim());
-          }
-        } else if (v && String(v).trim()) {
-          flat.push(String(v).trim());
-        }
-      }
-      return flat;
-    },
     // whether required fields for each step are filled
     canProceedPersonal() {
       // require firstName, lastName, birthdate and email to be non-empty and have no warnings
@@ -254,12 +239,22 @@ export default {
       const value = (evt && evt.target && evt.target.value) ? evt.target.value : this.form.firstName || this.form.lastName || '';
       const id = (evt && evt.target && evt.target.id) ? evt.target.id : 'fname';
       let messages = [];
-      if (this.allCaps(value)) messages.push('All capatalized name is not allowed!');
-      if (this.containsNum(value) || this.containsSymbol(value)) messages.push('Invalid name input');
-      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word in your name must be capitalized');
-      if (this.hasThreeSameConsecutiveLetters(value)) messages.push('Three consecutive same letters are not allowed!');
-      if (this.hasDoubleSpaces(value)) messages.push('Double spaces are not allowed!');
-      if (this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive spaces are not allowed!');
+
+      // Check errors in priority order - most probable first errors first
+      if (value.length > 0 && !this.wordsCapitalized(value)) {
+        messages.push('First letter of each word must be capitalized!');
+      } else if (this.containsNum(value) || this.containsSymbol(value)) {
+        messages.push('Invalid name input');
+      } else if (this.hasDoubleSpaces(value)) {
+        messages.push('Double spaces are not allowed!');
+      } else if (this.allCaps(value)) {
+        messages.push('All capatalized name is not allowed!');
+      } else if (this.hasThreeSameConsecutiveLetters(value)) {
+        messages.push('Three consecutive same letters are not allowed!');
+      } else if (this.hasThreeConsecutiveSpaces(value)) {
+        messages.push('Three consecutive spaces are not allowed!');
+      }
+
       this.warnings[id] = messages;
     },
 
@@ -268,10 +263,18 @@ export default {
       const id = input.id;
       const value = input.value;
       let messages = [];
-      if (value.length > 2) messages.push('Input too long!');
-      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word in your middle name must be capitalized');
-      if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) messages.push('Invalid middle name input');
-      if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs error');
+
+      // Check errors in priority order - most probable first errors first
+      if (value.length > 0 && !this.wordsCapitalized(value)) {
+        messages.push('First letter of each word must be capitalized');
+      } else if (value.length > 2) {
+        messages.push('Input too long!');
+      } else if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) {
+        messages.push('Invalid middle name input');
+      } else if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) {
+        messages.push('Three consecutive inputs error');
+      }
+
       this.warnings[id] = messages;
     },
 
@@ -280,9 +283,16 @@ export default {
       const id = input.id;
       const value = input.value;
       let messages = [];
-      if (value.length > 3) messages.push('Input too long!');
-      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word in your suffix must be capitalized!');
-      if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) messages.push('Invalid suffix input');
+
+      // Check errors in priority order - most probable first errors first
+      if (value.length > 0 && !this.wordsCapitalized(value)) {
+        messages.push('First letter of each word must be capitalized!');
+      } else if (value.length > 3) {
+        messages.push('Input too long!');
+      } else if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) {
+        messages.push('Invalid suffix input');
+      }
+
       this.warnings[id] = messages;
     },
 
@@ -291,10 +301,18 @@ export default {
       const value = input.value;
       let messages = [];
       if (!value) return messages;
-      if (this.allCaps(value)) messages.push('All caps not allowed!');
-      if (value.length > 0 && !this.wordsCapitalized(value)) messages.push('First letter of each word must be capitalized!');
-      if (this.hasDoubleSpaces(value)) messages.push('Double spaces are not allowed!');
-      if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs not allowed!');
+
+      // Check errors in priority order - most probable first errors first
+      if (value.length > 0 && !this.wordsCapitalized(value)) {
+        messages.push('First letter of each word must be capitalized!');
+      } else if (this.hasDoubleSpaces(value)) {
+        messages.push('Double spaces are not allowed!');
+      } else if (this.allCaps(value)) {
+        messages.push('All caps not allowed!');
+      } else if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) {
+        messages.push('Three consecutive inputs not allowed!');
+      }
+
       return messages; // Ensure this returns an array
     },
 
@@ -312,18 +330,21 @@ export default {
           /^(?:P(?:urok)?)[\s\-.]*\d{1,3}[A-Za-z]?$/i, // P, Purok prefix
           /^\d{1,3}[A-Za-z]?$/ // plain number or number+suffix
         ];
+
+        // Check errors in priority order - only add first error found
         if (!allowedChars.test(value)) {
           messages.push('Invalid characters in purok. Only letters, numbers, spaces, dashes and dots are allowed.');
         } else if (!patterns.some(p => p.test(value))) {
           messages.push('Purok must be like "P-1", "Purok 2", or a plain number (e.g. "5" or "12A").');
+        } else if (this.hasDoubleSpaces(value)) {
+          messages.push('Double spaces are not allowed!');
+        } else if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) {
+          messages.push('Three consecutive inputs not allowed!');
         }
-        // Generic checks (skip strict capitalization for purok)
-        if (this.hasDoubleSpaces(value)) messages.push('Double spaces are not allowed!');
-        if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs not allowed!');
       } else {
         // Use general address validation for other street fields
         messages = this.validateAddress(evt);
-        if (input.value.length > 0 && !this.onlyDashAllowed(input.value)) {
+        if (input.value.length > 0 && !this.onlyDashAllowed(input.value) && messages.length === 0) {
           messages.push('Invalid purok input');
         }
       }
@@ -335,10 +356,16 @@ export default {
       const input = evt.target;
       const id = input.id;
       let messages = this.validateAddress(evt);
-      if (this.numisFollowedByAlphabet(input.value)) messages.push('Invalid Input!');
-      // Allow dashes in barangay names (like Caloc-an), only flag digit-dash-letter pattern
-      // if (this.numDashLetter(input.value)) messages.push('Invalid Input!!');
-      if (/^[a-zA-Z0-9\s-]+$/.test(input.value) === false && input.value.length > 0) messages.push('Invalid Input!');
+
+      // Only add additional errors if no address validation errors exist
+      if (messages.length === 0) {
+        if (this.numisFollowedByAlphabet(input.value)) {
+          messages.push('Invalid Input!');
+        } else if (/^[a-zA-Z0-9\s-]+$/.test(input.value) === false && input.value.length > 0) {
+          messages.push('Invalid Input!');
+        }
+      }
+
       this.warnings[id] = messages;
     },
 
@@ -346,8 +373,16 @@ export default {
       const input = evt.target;
       const id = input.id;
       let messages = this.validateAddress(evt);
-      if (this.containsNum(input.value)) messages.push('Invalid city input');
-      if (this.containsSymbol(input.value)) messages.push('Invalid city input!');
+
+      // Only add additional errors if no address validation errors exist
+      if (messages.length === 0) {
+        if (this.containsNum(input.value)) {
+          messages.push('Invalid city input');
+        } else if (this.containsSymbol(input.value)) {
+          messages.push('Invalid city input!');
+        }
+      }
+
       this.warnings[id] = messages;
     },
 
@@ -362,32 +397,40 @@ export default {
         return;
       }
 
-      // Apply most validateAddress rules except strict capitalization for provinces
-      if (this.allCaps(value)) messages.push('All caps not allowed!');
-      if (this.hasDoubleSpaces(value)) messages.push('Double spaces are not allowed!');
-      if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) messages.push('Three consecutive inputs not allowed!');
+      // Check errors in priority order - only add first error found
+      if (this.allCaps(value)) {
+        messages.push('All caps not allowed!');
+      } else if (this.hasDoubleSpaces(value)) {
+        messages.push('Double spaces are not allowed!');
+      } else if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) {
+        messages.push('Three consecutive inputs not allowed!');
+      } else {
+        // Custom capitalization check for provinces
+        const words = value.trim().split(/\s+/);
+        const allowedLowercase = ['del', 'de', 'da', 'ng', 'sa', 'ni', 'kay'];
+        let hasCapitalizationError = false;
 
-      // Custom capitalization check for provinces
-      const words = value.trim().split(/\s+/);
-      const allowedLowercase = ['del', 'de', 'da', 'ng', 'sa', 'ni', 'kay'];
-      let hasCapitalizationError = false;
-
-      for (let i = 0; i < words.length; i++) {
-        const word = words[i];
-        if (word.length > 0) {
-          // First word must be capitalized, others can be lowercase if they're in the allowed list
-          if (i === 0 && word[0] !== word[0].toUpperCase()) {
-            hasCapitalizationError = true;
-            break;
-          } else if (i > 0 && !allowedLowercase.includes(word.toLowerCase()) && word[0] !== word[0].toUpperCase()) {
-            hasCapitalizationError = true;
-            break;
+        for (let i = 0; i < words.length; i++) {
+          const word = words[i];
+          if (word.length > 0) {
+            // First word must be capitalized, others can be lowercase if they're in the allowed list
+            if (i === 0 && word[0] !== word[0].toUpperCase()) {
+              hasCapitalizationError = true;
+              break;
+            } else if (i > 0 && !allowedLowercase.includes(word.toLowerCase()) && word[0] !== word[0].toUpperCase()) {
+              hasCapitalizationError = true;
+              break;
+            }
           }
+        }
+
+        if (hasCapitalizationError) {
+          messages.push('First letter of each word must be capitalized!');
+        } else if (this.containsNum(value) || this.containsSymbol(value)) {
+          messages.push('Invalid Input!');
         }
       }
 
-      if (hasCapitalizationError) messages.push('First letter of each word must be capitalized!');
-      if (this.containsNum(value) || this.containsSymbol(value)) messages.push('Invalid Input!');
       this.warnings[id] = messages;
     },
 
@@ -395,18 +438,29 @@ export default {
       const input = evt.target;
       const id = input.id;
       let messages = this.validateAddress(evt);
-      if (this.containsNum(input.value) || this.containsSymbol(input.value)) messages.push('Invalid country input');
+
+      // Only add additional errors if no address validation errors exist
+      if (messages.length === 0 && (this.containsNum(input.value) || this.containsSymbol(input.value))) {
+        messages.push('Invalid country input');
+      }
+
       this.warnings[id] = messages;
     },
 
     validateZipcode(evt) {
       const input = evt.target;
       const id = input.id;
-      let messages = this.validateAddress(evt);
-      const zipFormatRegex = /^\d{4}$/;
-      if (!/[0-9]/.test(input.value)) messages.push('Invalid zipcode input');
-      if (!zipFormatRegex.test(input.value)) messages.push('Zipcode must be 4 digits!');
-      this.warnings[id] = messages.join('! ');
+      const value = input.value;
+      let messages = [];
+
+      // Check errors in priority order - most probable first errors first
+      if (!/^\d{4}$/.test(value)) {
+        messages.push('Zipcode must be 4 digits!');
+      } else if (!/[0-9]/.test(value)) {
+        messages.push('Invalid zipcode input');
+      }
+
+      this.warnings[id] = messages;
     },
 
     validatePassword(evt) {
@@ -431,12 +485,18 @@ export default {
       if (hasSymbol) score++;
       this.passwordStrengthScore = score >= 4 ? 3 : score <= 1 ? 1 : 2; // Normalize to 1–3
 
-      // Validation messages
-      if (!isLong) messages.push('Password must be at least 8 characters long');
-      if (!hasUpper) messages.push('Password must include at least one uppercase letter');
-      if (!hasLower) messages.push('Password must include at least one lowercase letter');
-      if (!hasNumber) messages.push('Password must include at least one number');
-      if (!hasSymbol) messages.push('Password must include at least one special symbol');
+      // Validation messages in priority order - most probable first errors first
+      if (!isLong) {
+        messages.push('Password must be at least 8 characters long');
+      } else if (!hasLower) {
+        messages.push('Password must include at least one lowercase letter');
+      } else if (!hasUpper) {
+        messages.push('Password must include at least one uppercase letter');
+      } else if (!hasNumber) {
+        messages.push('Password must include at least one number');
+      } else if (!hasSymbol) {
+        messages.push('Password must include at least one special symbol');
+      }
 
       this.warnings[id] = messages;
     },
@@ -463,10 +523,18 @@ export default {
       const value = evt.target.value.trim();
       const id = evt.target.id;
       let messages = [];
-      if (!value) messages.push('Answer cannot be empty.');
-      if (value.length < 2) messages.push('Answer too short.');
-      if (this.hasDoubleSpaces(evt.target.value)) messages.push('Double spaces are not allowed!');
-      if (this.containsSymbol(value)) messages.push('Avoid using special symbols.');
+
+      // Check errors in priority order - most probable first errors first
+      if (!value) {
+        messages.push('Answer cannot be empty.');
+      } else if (value.length < 2) {
+        messages.push('Answer too short.');
+      } else if (this.containsSymbol(value)) {
+        messages.push('Avoid using special symbols.');
+      } else if (this.hasDoubleSpaces(evt.target.value)) {
+        messages.push('Double spaces are not allowed!');
+      }
+
       this.warnings[id] = messages;
     },
 
@@ -482,20 +550,40 @@ export default {
         return;
       }
 
-      // LOCAL VALIDATION
-      if (id === 'user_id' && !/^\d{4}-\d{4}$/.test(value)) messages.push('ID must be in the format 0000-0000!');
-      if (type === 'email') {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) messages.push('Invalid email format');
-      }
-      if (type === 'username') {
-        const usernameRegex = /^[a-z]+_[a-z]+$/;
-        if (value.length < 5) messages.push('Username must be at least 5 characters long');
-        if (value.length > 20) messages.push('Username cannot exceed 20 characters');
-        if (!usernameRegex.test(value)) messages.push('Username must be "a-z_a-z" format');
+      // LOCAL VALIDATION - Check errors in priority order
+      if (id === 'user_id' && !/^\d{4}-\d{4}$/.test(value)) {
+        messages.push('ID must be in the format 0000-0000!');
+        this.warnings[id] = messages;
+        return; // Don't proceed to database check if format is invalid
       }
 
-      // DATABASE CHECK
+      if (type === 'email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          messages.push('Invalid email format');
+          this.warnings[id] = messages;
+          return; // Don't proceed to database check if format is invalid
+        }
+      }
+
+      if (type === 'username') {
+        const usernameRegex = /^[a-z]+_[a-z]+$/;
+        if (value.length < 5) {
+          messages.push('Username must be at least 5 characters long');
+          this.warnings[id] = messages;
+          return;
+        } else if (value.length > 20) {
+          messages.push('Username cannot exceed 20 characters');
+          this.warnings[id] = messages;
+          return;
+        } else if (!usernameRegex.test(value)) {
+          messages.push('Username must be "a-z_a-z" format');
+          this.warnings[id] = messages;
+          return;
+        }
+      }
+
+      // DATABASE CHECK - Only if local validation passes
       fetch('http://localhost/Security2.0/api/check_existing.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
