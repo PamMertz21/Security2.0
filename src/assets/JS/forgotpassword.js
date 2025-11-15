@@ -16,6 +16,11 @@ export default {
       username: '',
       questionsLoaded: false,
       step: 1,
+      steps: [
+        { id: 1, label: 'Account ID' },
+        { id: 2, label: 'Security Questions' },
+        { id: 3, label: 'New Password' }
+      ],
       form: {
         question1: '',
         answer1: '',
@@ -80,6 +85,11 @@ export default {
   },
 
   methods: {
+    isStepCompleted(stepId) {
+      // A step is completed if the current step is greater than this step
+      return this.step > stepId;
+    },
+
     containsSymbol(value) {
       // Returns true if any non-alphanumeric (except space) characters are found
       return /[^a-zA-Z0-9\s]/.test(value);

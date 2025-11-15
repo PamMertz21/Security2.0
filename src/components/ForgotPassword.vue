@@ -1,7 +1,25 @@
 <template>
     <form @submit.prevent="submitReset">
+      <h1 v-if="step === 1 || step === 2">Forgot Password</h1>
+      <h1 v-if="step === 3">Change Password</h1>
+
+      <div class="steps">
+        <div class="step-indicator">
+          <div
+            v-for="(stepInfo, index) in steps"
+            :key="stepInfo.id"
+            class="step-item"
+            :class="{
+              'active': step === stepInfo.id,
+              'completed': isStepCompleted(stepInfo.id)
+            }"
+          >
+            <div class="step-number">{{ index + 1 }}</div>
+            <div class="step-label">{{ stepInfo.label }}</div>
+          </div>
+        </div>
+      </div>
       <div class="form-content" v-if="step === 1">
-        <h1>Forgot Password</h1>
         <div class="header">
           <h3>Account Detail</h3>
         </div>
@@ -20,7 +38,6 @@
       </div>
 
       <div class="form-content" v-if="step === 2">
-        <h1>Forgot Password</h1>
         <div class="account-info" v-if="username && userId">
           <p><strong>Username:</strong> {{ username }}</p>
           <p><strong>ID:</strong> {{ userId }}</p>
@@ -80,6 +97,11 @@
       </div>
 
       <div class="form-content" v-if="step === 3">
+        <div class="account-info" v-if="username && userId">
+          <p><strong>Username:</strong> {{ username }}</p>
+          <p><strong>ID:</strong> {{ userId }}</p>
+        </div>
+        <hr>
         <ChangePassword :id-number="idNumber" ref="changePasswordComponent"/>
       </div>
 

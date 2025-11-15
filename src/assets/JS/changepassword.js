@@ -6,6 +6,16 @@ export default {
       type: String,
       required: false,
       default: ''
+    },
+    username: {
+      type: String,
+      required: false,
+      default: ''
+    },
+    userId: {
+      type: [String, Number],
+      required: false,
+      default: null
     }
   },
   data() {

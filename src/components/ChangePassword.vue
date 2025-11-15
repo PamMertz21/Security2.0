@@ -1,6 +1,4 @@
 <template>
-  <h1>Change Password</h1>
-  <hr>
 
     <div
       class="warning-container"
