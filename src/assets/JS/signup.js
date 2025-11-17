@@ -56,10 +56,10 @@ export default {
     canProceedPersonal() {
       // require firstName, lastName, birthdate and email to be non-empty and have no warnings
       const f = this.form;
-      const filled = Boolean(f.firstName && String(f.firstName).trim() && f.lastName && String(f.lastName).trim() && f.birthdate && f.email && String(f.email).trim());
+      const filled = Boolean(f.firstName && String(f.firstName).trim() && f.lastName && String(f.lastName).trim() && f.birthdate && f.id && String(f.id).trim());
       if (!filled) return false;
       // check field-specific warnings (use input ids)
-      return !this.hasFieldWarnings(['fname','mname', 'lname', 'suffix', 'birthdate','email','age']);
+      return !this.hasFieldWarnings(['fname','mname', 'lname', 'suffix', 'birthdate','user_id','age']);
     },
     canProceedAddress() {
       const f = this.form;
@@ -77,7 +77,7 @@ export default {
     canProceedLogin() {
       const f = this.form;
       const filled =
-        f.id && String(f.id).trim() &&
+        f.email && String(f.email).trim() &&
         f.username && String(f.username).trim() &&
         f.password && String(f.password).trim() &&
         f.repassword && String(f.repassword).trim();
@@ -88,7 +88,7 @@ export default {
       if (f.password !== f.repassword) return false;
 
       // Check if there are any warnings for these fields
-      return !this.hasFieldWarnings(['user_id', 'username', 'password', 'repassword']);
+      return !this.hasFieldWarnings(['email', 'username', 'password', 'repassword']);
     },
     canProceedLoginDetails() {
       // Combine address and login validations
@@ -144,8 +144,8 @@ export default {
           this.warnings.birthdate = ['Birthdate is required.'];
           isValid = false;
         }
-        if (!this.form.email.trim()) {
-          this.warnings.email = ['Email is required.'];
+        if (!this.form.id.trim()) {
+          this.warnings.user_id = ['ID number is required.'];
           isValid = false;
         }
       }
@@ -175,8 +175,8 @@ export default {
           this.warnings.zip = ['Zip code is required.'];
           isValid = false;
         }
-        if (!this.form.id.trim()) {
-          this.warnings.user_id = ['ID number is required.'];
+        if (!this.form.email.trim()) {
+          this.warnings.email = ['Email is required.'];
           isValid = false;
         }
         if (!this.form.username.trim()) {
@@ -333,7 +333,7 @@ export default {
       } else if (this.allCaps(value)) {
         messages.push('All capatalized name is not allowed!');
       } else if (this.hasThreeSameConsecutiveLetters(value)) {
-        messages.push('Three consecutive same letters are not allowed!');
+        messages.push('Three consecutive letters are not allowed!');
       } else if (this.hasThreeConsecutiveSpaces(value)) {
         messages.push('Three consecutive spaces are not allowed!');
       }
@@ -416,9 +416,9 @@ export default {
 
         // Check errors in priority order - only add first error found
         if (!allowedChars.test(value)) {
-          messages.push('Invalid characters in purok. Only letters, numbers, spaces, dashes and dots are allowed.');
+          messages.push('Invalid characters in purok. Only a-z, numbers and - allowed.');
         } else if (!patterns.some(p => p.test(value))) {
-          messages.push('Purok must be like "P-1", "Purok 2", or a plain number (e.g. "5" or "12A").');
+          messages.push('Purok must be like "P-1", "Purok 2", "5" or "12A".');
         } else if (this.hasDoubleSpaces(value)) {
           messages.push('Double spaces are not allowed!');
         } else if (this.hasThreeSameConsecutiveLetters(value) || this.hasThreeConsecutiveSpaces(value)) {
@@ -751,7 +751,7 @@ export default {
           return;
         }
         // success
-        this.successMessage = 'Registration successful! Redirecting to login...';
+        this.successMessage = 'Registration successful!';
         setTimeout(() => {
           this.$router.push('/login');
         }, 2000);

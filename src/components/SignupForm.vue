@@ -83,10 +83,10 @@
           <label for="mname">Sex: <span>*</span></label>
         </div>
         <div class="form-group">
-          <input type="email" id="email" name="email" v-model="form.email" required @input="checkEmail">
-          <label for="email">Email: <span>*</span></label>
-          <div class="field-error" v-if="warnings.email && warnings.email.length">
-            <div class="error-message">{{ warnings.email[0] }}</div>
+          <input type="text" id="user_id" name="user_id" v-model="form.id" required @input="checkID">
+          <label for="id">ID No. <span>*</span></label>
+          <div class="field-error" v-if="warnings.user_id && warnings.user_id.length">
+            <div class="error-message">{{ warnings.user_id[0] }}</div>
           </div>
         </div>
       </div>
@@ -144,10 +144,10 @@
         </div>
         <!-- Login Details Fields -->
         <div class="form-group">
-          <input type="text" id="user_id" name="user_id" v-model="form.id" required @input="checkID">
-          <label for="id">ID No. <span>*</span></label>
-          <div class="field-error" v-if="warnings.user_id && warnings.user_id.length">
-            <div class="error-message">{{ warnings.user_id[0] }}</div>
+          <input type="email" id="email" name="email" v-model="form.email" required @input="checkEmail">
+          <label for="email">Email: <span>*</span></label>
+          <div class="field-error" v-if="warnings.email && warnings.email.length">
+            <div class="error-message">{{ warnings.email[0] }}</div>
           </div>
         </div>
         <div class="form-group">

@@ -7,6 +7,7 @@ export default {
   data() {
     return {
       isStep2Loading: false,
+      canChangePassword: false,
       warnings: {
         server: []
       },
@@ -69,22 +70,14 @@ export default {
       );
     },
     isChangePasswordValid() {
-      // Check if the ChangePassword component has validation errors
-      if (!this.$refs.changePasswordComponent) return false;
-
-      const component = this.$refs.changePasswordComponent;
-      const hasPasswordWarnings =
-        (component.warnings.newPassword && component.warnings.newPassword.length > 0) ||
-        (component.warnings.confirmPassword && component.warnings.confirmPassword.length > 0);
-
-      const hasError = Boolean(component.error);
-      const emptyFields = !component.newPassword || !component.confirmPassword;
-
-      return !hasPasswordWarnings && !hasError && !emptyFields;
+      return this.canChangePassword;
     },
   },
 
   methods: {
+    handlePasswordValidationChanged(payload) {
+      this.canChangePassword = !!(payload && payload.canSubmit);
+    },
     isStepCompleted(stepId) {
       // A step is completed if the current step is greater than this step
       return this.step > stepId;

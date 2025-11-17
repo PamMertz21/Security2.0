@@ -102,7 +102,11 @@
           <p><strong>ID:</strong> {{ userId }}</p>
         </div>
         <hr>
-        <ChangePassword :id-number="idNumber" ref="changePasswordComponent"/>
+        <ChangePassword
+          :id-number="idNumber"
+          ref="changePasswordComponent"
+          @validation-changed="handlePasswordValidationChanged"
+        />
       </div>
 
       <div class="btn-container" v-if="step === 1">
@@ -128,7 +132,14 @@
 
       <div class="btn-container" v-if="step === 3">
         <button type="button" @click="step = 2" class="btn">Back</button>
-        <button type="button" @click="handleChangePassword" class="btn" :disabled="!isChangePasswordValid">Change Password</button>
+        <button
+          type="button"
+          @click="handleChangePassword"
+          class="btn"
+          :disabled="!isChangePasswordValid"
+        >
+          Change Password
+        </button>
       </div>
     </form>
 </template>

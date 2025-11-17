@@ -311,6 +311,7 @@ a {
 .input-container {
   position: relative;
   margin-left: .8em;
+  width: 97%;
 }
 
 .input-container .eye-icon {

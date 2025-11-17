@@ -18,6 +18,8 @@ export default {
       default: null
     }
   },
+  emits: ['validation-changed'],
+
   data() {
     return {
       newPassword: "",
@@ -76,6 +78,15 @@ export default {
     },
   },
   methods: {
+    emitValidationState() {
+      const hasPasswordWarnings =
+        (this.warnings.newPassword && this.warnings.newPassword.length > 0) ||
+        (this.warnings.confirmPassword && this.warnings.confirmPassword.length > 0);
+      const hasError = !!this.error;
+      const emptyFields = !this.newPassword || !this.confirmPassword;
+      const canSubmit = !hasPasswordWarnings && !hasError && !emptyFields;
+      this.$emit('validation-changed', { canSubmit, hasPasswordWarnings, hasError, emptyFields });
+    },
     togglePassword(field) {
       if (field === "new") this.showNewPassword = !this.showNewPassword;
       if (field === "confirm") this.showConfirmPassword = !this.showConfirmPassword;
@@ -115,6 +126,7 @@ export default {
       if (!hasSymbol) messages.push("Password must include at least one special symbol");
 
       this.warnings.newPassword = messages;
+      this.emitValidationState();
     },
 
     validateConfirmPassword() {
@@ -123,6 +135,7 @@ export default {
         messages.push("Passwords do not match");
       }
       this.warnings.confirmPassword = messages;
+      this.emitValidationState();
     },
     async submitChange() {
       this.error = "";
@@ -146,7 +159,7 @@ export default {
         (this.warnings.newPassword && this.warnings.newPassword.length) ||
         (this.warnings.confirmPassword && this.warnings.confirmPassword.length)
       ) {
-        this.error;
+        this.emitValidationState();
         return;
       }
       try {
@@ -171,6 +184,7 @@ export default {
       } catch {
         this.error = "Network error, please try again.";
       }
+      this.emitValidationState();
       console.log('Sending to backend:', {
         id_number: this.idNumber,
         new_password: this.newPassword
