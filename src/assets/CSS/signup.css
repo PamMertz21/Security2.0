@@ -6,7 +6,7 @@ form {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1em;
+  gap: .8em;
 }
 
 .steps {
@@ -18,7 +18,7 @@ form {
   justify-content: space-between;
   align-items: center;
   position: relative;
-  padding: 0 1em;
+  padding: 0 ;
 }
 
 .step-indicator::before {
@@ -106,8 +106,8 @@ form {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  padding: 1.5em 0;
-  gap: 1em;
+  padding-bottom: .5em;
+  gap: .8em;
 }
 
 .registration-box {
@@ -182,13 +182,12 @@ a {
 }
 
 .password-strength {
-  margin-top: 0.5em;
   width: 90%;
   align-self: center;
 }
 
 .strength-bar {
-  height: 6px;
+  height: 3px;
   border-radius: 4px;
   margin-bottom: 0.3em;
   transition: background-color 0.3s, width 0.3s;
@@ -209,7 +208,7 @@ a {
 }
 
 .strength-text {
-  font-size: 0.85em;
+  font-size: 0.75em;
   text-align: left;
   margin-left: 0.5em;
   font-weight: 500;
@@ -243,15 +242,14 @@ a {
   background-color: #d4edda;
   border: 1px solid #c3e6cb;
   border-radius: 0.5em;
-  padding: 0.75em 1em;
+  padding: 0.5em .8em;
   gap: 1em;
-  margin-bottom: 1em;
 }
 
 .success-container svg {
-  height: 2em;
-  width: 2em;
-  min-width: 2em;
+  height: 1em;
+  width: 1em;
+  min-width: 1em;
   color: #28a745;
   stroke-width: 2;
 }

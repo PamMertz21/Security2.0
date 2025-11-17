@@ -47,8 +47,8 @@ export default {
   computed: {
     steps() {
       return [
-        { id: 'personal', label: 'Personal Details' },
-        { id: 'login_details', label: 'Address & Login' },
+        { id: 'personal', label: 'Personal' },
+        { id: 'login_details', label: 'Address' },
         { id: 'questions', label: 'Questions' }
       ];
     },
