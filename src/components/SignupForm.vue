@@ -34,6 +34,13 @@
       <hr>
       <div class="registration-box">
         <div class="form-group">
+          <input type="text" id="user_id" name="user_id" v-model="form.id" required @input="checkID">
+          <label for="id">ID No. <span>*</span></label>
+          <div class="field-error" v-if="warnings.user_id && warnings.user_id.length">
+            <div class="error-message">{{ warnings.user_id[0] }}</div>
+          </div>
+        </div>
+        <div class="form-group">
           <input type="text" id="fname" name="fname" v-model="form.firstName" required @input="validateName">
           <label for="fname">First Name: <span>*</span></label>
           <div class="field-error" v-if="warnings.fname && warnings.fname.length">
@@ -62,6 +69,13 @@
           </div>
         </div>
         <div class="form-group">
+          <select name="sex" id="sex" v-model="form.sex" required>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+          </select>
+          <label for="mname">Sex: <span>*</span></label>
+        </div>
+        <div class="form-group">
           <input type="date" id="birthdate" name="birthdate" v-model="form.birthdate" required @input="onBirthInput">
           <label for="birthdate">Birthdate: <span>*</span></label>
           <div class="field-error" v-if="warnings.birthdate && warnings.birthdate.length">
@@ -73,20 +87,6 @@
           <label for="age">Age: <span>*</span></label>
           <div class="field-error" v-if="warnings.age && warnings.age.length">
             <div class="error-message">{{ warnings.age[0] }}</div>
-          </div>
-        </div>
-        <div class="form-group">
-          <select name="sex" id="sex" v-model="form.sex" required>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-          </select>
-          <label for="mname">Sex: <span>*</span></label>
-        </div>
-        <div class="form-group">
-          <input type="text" id="user_id" name="user_id" v-model="form.id" required @input="checkID">
-          <label for="id">ID No. <span>*</span></label>
-          <div class="field-error" v-if="warnings.user_id && warnings.user_id.length">
-            <div class="error-message">{{ warnings.user_id[0] }}</div>
           </div>
         </div>
       </div>

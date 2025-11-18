@@ -48,7 +48,7 @@ export default {
     steps() {
       return [
         { id: 'personal', label: 'Personal' },
-        { id: 'login_details', label: 'Address' },
+        { id: 'login_details', label: 'Address & Login' },
         { id: 'questions', label: 'Questions' }
       ];
     },
@@ -366,14 +366,29 @@ export default {
       const id = input.id;
       const value = input.value;
       let messages = [];
+      const firstChar = value.charAt(0);
+      // Regex for common suffixes
+      const suffixRegex = /^(?:Jr|Sr|I|II|III|IV|V|VI|VII|VIII|IX|X)\.?$/i;
 
-      // Check errors in priority order - most probable first errors first
-      if (value.length > 0 && !this.wordsCapitalized(value)) {
-        messages.push('First letter of each word must be capitalized!');
-      } else if (value.length > 3) {
+      if (!value) {
+        this.warnings[id] = [];
+        return;
+      }
+
+      // invalid input
+      if (!suffixRegex.test(value)) {
+        messages.push('Invalid suffix. Use: Jr, Sr, I, II, III, IV, V, etc.');
+        this.warnings[id] = messages;
+        return;
+      }
+
+      // Ensure capitalization
+      else if (firstChar && firstChar !== firstChar.toUpperCase()) {
+        messages.push('Suffix should start with a capital letter.');
+      }
+
+      else if (value.length > 4) {
         messages.push('Input too long!');
-      } else if (/^[a-zA-Z.]+$/.test(value) === false && value.length > 0) {
-        messages.push('Invalid suffix input');
       }
 
       this.warnings[id] = messages;

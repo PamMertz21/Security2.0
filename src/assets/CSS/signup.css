@@ -1,6 +1,6 @@
 
 form {
-  width: 100%;
+  width: 45em;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -28,7 +28,7 @@ form {
   left: 10%;
   right: 10%;
   height: 2px;
-  background-color: #e0e0e0;
+  background-color: #d9d9d9;
   z-index: 0;
 }
 
@@ -46,7 +46,7 @@ form {
   width: 2.5em;
   height: 2.5em;
   border-radius: 50%;
-  background-color: #e0e0e0;
+  background-color: #d9d9d9;
   color: #666;
   display: flex;
   align-items: center;
@@ -66,9 +66,9 @@ form {
 }
 
 .step-item.completed .step-number {
-  background-color: #28a745;
+  background-color: #39954e;
   color: white;
-  border-color: #28a745;
+  border-color: #4aac61;
 }
 
 .step-item.completed .step-number::after {
