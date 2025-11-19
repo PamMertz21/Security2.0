@@ -11,7 +11,8 @@ const routes = [
   { path: '/login', name: 'login', component: LoginForm },
   { path: '/signup', name: 'signup', component: SignupForm },
   { path: '/dashboard', name: 'dashboard', component: Dashboard },
-  { path: '/forgot', name: 'forgot', component: ForgotPassword }
+  { path: '/forgot', name: 'forgot', component: ForgotPassword },
+  { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('./components/NotFound.vue') }
 ];
 
 // Use Vite's base (set in vite.config.js) for history so router works when app is served from /Security/

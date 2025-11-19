@@ -3,10 +3,46 @@
 // Usage: open this file through a PHP server, e.g. php -S localhost:8000
 
 // whitelist of pages to avoid file inclusion issues
-$pages = ['home' => 'views/home.php', 'login' => 'views/login.php', 'signup' => 'views/signup.php', 'dashboard' => 'views/dashboard.php'];
+$pages = [
+  'home' => 'views/home.php',
+  'login' => 'views/login.php',
+  'signup' => 'views/signup.php',
+  'dashboard' => 'views/dashboard.php',
+  '404' => 'views/404.php'
+];
 $page = 'home';
-if (isset($_GET['page']) && array_key_exists($_GET['page'], $pages)) {
-  $page = $_GET['page'];
+$normalizePath = static function (?string $path) {
+  if ($path === null || $path === '') {
+    return '/';
+  }
+  $trimmed = rtrim($path, '/');
+  return $trimmed === '' ? '/' : $trimmed;
+};
+if (isset($_GET['page'])) {
+  $requestedPage = $_GET['page'];
+  if (array_key_exists($requestedPage, $pages)) {
+    $page = $requestedPage;
+  } else {
+    $page = '404';
+  }
+} else {
+  $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+  if ($requestPath === false) {
+    $requestPath = '/';
+  }
+  $scriptPath = $_SERVER['SCRIPT_NAME'] ?? '';
+  $basePath = dirname($scriptPath);
+  if ($basePath === DIRECTORY_SEPARATOR || $basePath === '.' || $basePath === '') {
+    $basePath = '/';
+  }
+  $validEntryPaths = array_unique([
+    $normalizePath($basePath),
+    $normalizePath($scriptPath),
+    '/'
+  ]);
+  if (!in_array($normalizePath($requestPath), $validEntryPaths, true)) {
+    $page = '404';
+  }
 }
 ?>
 <!doctype html>
@@ -60,8 +96,8 @@ if (isset($_GET['page']) && array_key_exists($_GET['page'], $pages)) {
   </head>
   <body>
     <div id="app">
-      <?php if ($page === 'signup' || $page === 'login' || $page === 'home'): ?>
-        <header class="<?= $page === 'signup' || $page === 'login' ? 'portal' : '' ?>">
+      <?php if (in_array($page, ['signup', 'login', 'home', '404'], true)): ?>
+        <header class="<?= in_array($page, ['signup', 'login'], true) ? 'portal' : '' ?>">
           <img src="src/assets/images/Caraga_State_University_-_Cabadbaran_Campus_logo_(Reduced).png" alt="Logo">
           <div class="header-btn">
             <?php if ($page !== 'home'): ?>
@@ -94,7 +130,7 @@ if (isset($_GET['page']) && array_key_exists($_GET['page'], $pages)) {
           <?php elseif ($page === 'dashboard'): ?>
             <div class="page-container"><?php include $pages[$page]; ?></div>
           <?php else: ?>
-            <div class="page-container"><?php include $pages['home']; ?></div>
+            <div class="page-container"><?php include $pages[$page]; ?></div>
           <?php endif; ?>
         </div>
       </main>

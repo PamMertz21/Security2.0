@@ -39,7 +39,7 @@ export default {
       </div>
     </header>
 
-    <header v-else-if="$route.name === 'home'">
+    <header v-else-if="$route.name === 'home' || $route.name === 'not-found'">
       <div class="page-title">
         <img src="./assets/images/Caraga_State_University_-_Cabadbaran_Campus_logo_(Reduced).png" alt="Logo">
         <h3>FindMyProf</h3>
@@ -80,6 +80,14 @@ export default {
 
       <div class="page-container" v-else-if="$route.name === 'home'">
         <router-view></router-view>
+      </div>
+
+      <div class="page-container" v-else-if="$route.name === 'not-found'">
+        <div class="form-container">
+          <div class="form-box">
+            <router-view></router-view>
+          </div>
+        </div>
       </div>
     </main>
 
